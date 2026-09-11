@@ -65,5 +65,6 @@ class SupplierSerializer(serializers.ModelSerializer):
             "phone",
             "address",
             "is_active",
+            "created_at",
         ]
-        read_only_fields = ["id"]
+        read_only_fields = ["id", "created_at"]

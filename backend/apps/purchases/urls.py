@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import PurchaseViewSet
+from .views import PurchaseViewSet, SupplierViewSet
 
 
 router = DefaultRouter()
@@ -11,11 +11,7 @@ router.register(
     PurchaseViewSet,
     basename="purchase"
 )
-router.register(
-    "suppliers",
-    PurchaseViewSet,
-    basename="supplier"
-)
+router.register("suppliers", SupplierViewSet, basename="supplier")
 urlpatterns = [
     path("", include(router.urls)),
 ]

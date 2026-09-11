@@ -1,7 +1,8 @@
 from rest_framework import status, viewsets
 from rest_framework.response import Response
+from django.db.models import Q
 
-from apps.authentication.permissions import IsAdminOrManager
+from apps.authentication.permissions import IsAdminOrManager, IsAdminOrReadOnly
 
 from .models import Purchase, Supplier
 from .serializers import PurchaseSerializer, SupplierSerializer
@@ -61,6 +62,20 @@ class PurchaseViewSet(viewsets.ModelViewSet):
 
 
 class SupplierViewSet(viewsets.ModelViewSet):
-    queryset = Supplier.objects.all()
+    queryset = Supplier.objects.all().order_by("-id")
     serializer_class = SupplierSerializer
-    permission_classes = [IsAdminOrManager]
+    permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        queryset = Supplier.objects.all().order_by("-id")
+
+        search = self.request.query_params.get("search")
+
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search)
+                | Q(company_name__icontains=search)
+                | Q(phone__icontains=search)
+            )
+
+        return queryset
