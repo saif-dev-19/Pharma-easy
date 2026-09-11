@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getBatches, deleteBatch } from "../../api/batchApi";
+import { getBatches, deleteBatch, getBatchQR } from "../../api/batchApi";
 import { useAuth } from "../../context/AuthContext";
 
 const BatchList = () => {
@@ -51,6 +51,21 @@ const BatchList = () => {
         e.preventDefault();
         fetchBatches();
     };
+
+    const handleShowQR = async (batch) => {
+    try {
+        const data = await getBatchQR(batch.id);
+
+        window.open(data.qr_image, "_blank");
+    } catch (error) {
+        console.error("QR Error:", error);
+
+        alert(
+            error.response?.data?.detail ||
+            "Failed to load QR code."
+        );
+    }
+};
 
     const handleDelete = async (id) => {
         const confirmed = window.confirm(
@@ -206,9 +221,17 @@ const BatchList = () => {
                                             </td>
 
                                             <td>
-                                                <code>
-                                                    {batch.qr_code}
-                                                </code>
+                                                <div className="qr-cell">
+                                                    <code>{batch.qr_code}</code>
+
+                                                    <button
+                                                        type="button"
+                                                        className="qr-button"
+                                                        onClick={() => handleShowQR(batch)}
+                                                    >
+                                                        View QR
+                                                    </button>
+                                                </div>
                                             </td>
 
                                             {user?.role === "ADMIN" && (

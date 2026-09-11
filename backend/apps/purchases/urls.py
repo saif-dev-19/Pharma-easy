@@ -11,7 +11,11 @@ router.register(
     PurchaseViewSet,
     basename="purchase"
 )
-
+router.register(
+    "suppliers",
+    PurchaseViewSet,
+    basename="supplier"
+)
 urlpatterns = [
     path("", include(router.urls)),
 ]
