@@ -22,6 +22,9 @@ from rest_framework.routers import DefaultRouter
 
 from apps.authentication.views import UserManagementViewSet
 from apps.medicines.views import BatchQRImageView, QRMedicineDetailView
+from rest_framework_simplejwt.views import TokenRefreshView
+
+
 
 router = DefaultRouter()
 
@@ -33,6 +36,12 @@ router.register(
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+
+    path(
+            "token/refresh/",
+            TokenRefreshView.as_view(),
+            name="token_refresh",
+        ),
 
     path(
         "api/",

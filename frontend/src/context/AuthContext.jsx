@@ -4,7 +4,13 @@ import { loginUser } from "../api/authApi";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState(() => {
+        const storedUser = localStorage.getItem("user");
+
+        return storedUser
+            ? JSON.parse(storedUser)
+            : null;
+    });
 
     const login = async (username, password) => {
         const data = await loginUser(username, password);
@@ -39,6 +45,7 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
     return useContext(AuthContext);
 };
