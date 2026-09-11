@@ -24,22 +24,42 @@ class StockTransferItemSerializer(serializers.ModelSerializer):
 class StockTransferSerializer(serializers.ModelSerializer):
     items = StockTransferItemSerializer(many=True)
 
+    from_branch_name = serializers.CharField(
+        source="from_branch.name",
+        read_only=True
+    )
+
+    to_branch_name = serializers.CharField(
+        source="to_branch.name",
+        read_only=True
+    )
+
+    created_by_name = serializers.CharField(
+        source="created_by.username",
+        read_only=True
+    )
+
     class Meta:
         model = StockTransfer
         fields = [
             "id",
             "from_branch",
+            "from_branch_name",
             "to_branch",
+            "to_branch_name",
             "transfer_date",
             "status",
             "created_by",
+            "created_by_name",
             "created_at",
             "items",
         ]
+
         read_only_fields = [
             "id",
-            "status",
-            "created_by",
+            "from_branch_name",
+            "to_branch_name",
+            "created_by_name",
             "created_at",
         ]
 

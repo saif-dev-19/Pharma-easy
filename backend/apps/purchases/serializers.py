@@ -21,22 +21,43 @@ class PurchaseItemSerializer(serializers.ModelSerializer):
 class PurchaseSerializer(serializers.ModelSerializer):
     items = PurchaseItemSerializer(many=True)
 
+    supplier_name = serializers.CharField(
+        source="supplier.name",
+        read_only=True
+    )
+
+    branch_name = serializers.CharField(
+        source="branch.name",
+        read_only=True
+    )
+
+    created_by_name = serializers.CharField(
+        source="created_by.username",
+        read_only=True
+    )
+
     class Meta:
         model = Purchase
         fields = [
             "id",
             "supplier",
+            "supplier_name",
             "branch",
+            "branch_name",
             "invoice_number",
             "purchase_date",
             "total_amount",
             "created_by",
+            "created_by_name",
             "created_at",
             "items",
         ]
+
         read_only_fields = [
             "id",
-            "created_by",
+            "supplier_name",
+            "branch_name",
+            "created_by_name",
             "created_at",
         ]
 

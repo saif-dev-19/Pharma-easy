@@ -266,7 +266,7 @@ const Dashboard = () => {
 
                                         <td>
                                             <span className="branch-badge">
-                                                Branch {sale.branch}
+                                                {sale.branch}
                                             </span>
                                         </td>
 

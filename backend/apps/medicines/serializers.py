@@ -21,12 +21,29 @@ class MedicineSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at"]
 
 
+
 class BatchSerializer(serializers.ModelSerializer):
+    medicine = serializers.PrimaryKeyRelatedField(
+        queryset=Medicine.objects.filter(is_active=True)
+    )
+
+    medicine_name = serializers.CharField(
+        source="medicine.name",
+        read_only=True
+    )
+
+    medicine_strength = serializers.CharField(
+        source="medicine.strength",
+        read_only=True
+    )
+
     class Meta:
         model = Batch
         fields = [
             "id",
             "medicine",
+            "medicine_name",
+            "medicine_strength",
             "batch_number",
             "expiry_date",
             "pack_size",
@@ -35,8 +52,11 @@ class BatchSerializer(serializers.ModelSerializer):
             "qr_code",
             "created_at",
         ]
+
         read_only_fields = [
             "id",
+            "medicine_name",
+            "medicine_strength",
             "qr_code",
             "created_at",
         ]

@@ -27,6 +27,7 @@ class LoginView(APIView):
                     "username": user.username,
                     "role": user.role,
                     "branch_id": user.branch_id,
+                    "branch_name": user.branch.name if user.branch else None,
                 },
             },
             status=status.HTTP_200_OK,
@@ -41,16 +42,13 @@ from .serializers import UserManagementSerializer
 
 
 class UserManagementViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.select_related(
-        "branch"
-    ).all()
-
     serializer_class = UserManagementSerializer
     permission_classes = [IsAdmin]
 
     def get_queryset(self):
-        return User.objects.select_related(
-            "branch"
-        ).exclude(
-            role=User.Role.ADMIN
+        return (
+            User.objects
+            .select_related("branch")
+            .exclude(role=User.Role.ADMIN)
+            .order_by("-id")
         )

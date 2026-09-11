@@ -31,7 +31,9 @@ export const deleteBatch = async (id) => {
 };
 
 export const getBatchQR = async (id) => {
-    const response = await api.get(`/batches/${id}/qr/`);
+    const response = await api.get(`/batches/${id}/qr/`, {
+        responseType: "blob",
+    });
 
     return response.data;
 };

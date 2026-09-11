@@ -65,12 +65,30 @@ const Sidebar = () => {
         <aside className="sidebar">
             <div className="sidebar-brand">
                 <h2>Pharma Easy</h2>
-                <p>Management System</p>
+                <p>Manage your Pharmacy Easily</p>
             </div>
 
-            <div className="sidebar-user">
-                <strong>{user?.username}</strong>
-                <span>{user?.role}</span>
+            <div className="sidebar-user-info">
+                <div className="sidebar-info-item">
+                    <span className="sidebar-info-label">Name</span>
+                    <span className="sidebar-info-value">
+                        {user?.username || "-"}
+                    </span>
+                </div>
+
+                <div className="sidebar-info-item">
+                    <span className="sidebar-info-label">Role</span>
+                    <span className="sidebar-info-value">
+                        {user?.role || "-"}
+                    </span>
+                </div>
+
+                <div className="sidebar-info-item">
+                    <span className="sidebar-info-label">Branch</span>
+                    <span className="sidebar-info-value">
+                        {user?.branch_name || "All Branches"}
+                    </span>
+                </div>
             </div>
 
             <nav className="sidebar-nav">

@@ -4,6 +4,10 @@ from apps.sales.models import Sale
 
 
 class DashboardSaleSerializer(serializers.ModelSerializer):
+    branch = serializers.CharField(
+            source="branch.name",
+            read_only=True
+        )
     class Meta:
         model = Sale
         fields = [
@@ -15,4 +19,9 @@ class DashboardSaleSerializer(serializers.ModelSerializer):
             "discount",
             "paid_amount",
             "due_amount",
+        ]
+
+        read_only_fields = [
+            "id",
+            "branch",
         ]

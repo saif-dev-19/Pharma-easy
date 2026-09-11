@@ -16,6 +16,17 @@ import SupplierForm from "../pages/suppliers/SupplierForm";
 import PurchaseList from "../pages/purchases/PurchaseList";
 import PurchaseDetails from "../pages/purchases/PurchaseDetails";
 import PurchaseForm from "../pages/purchases/PurchaseForm";
+import POS from "../pages/sales/POS";
+import SalesList from "../pages/sales/SalesList";
+import SaleDetails from "../pages/sales/SaleDetails";
+import TransferList from "../pages/transfers/TransferList";
+import TransferForm from "../pages/transfers/TransferForm";
+import TransferDetails from "../pages/transfers/TransferDetails";
+import BranchList from "../pages/branches/BranchList";
+import BranchForm from "../pages/branches/BranchForm";
+import UserList from "../pages/users/UserList";
+import UserForm from "../pages/users/UserForm";
+import QRMedicine from "../pages/qr/QRMedicine";
 
 
 
@@ -29,6 +40,10 @@ const AppRoutes = () => {
                 <Route
                     path="/login"
                     element={<Login />}
+                />
+                <Route
+                    path="/qr/:qrCode"
+                    element={<QRMedicine />}
                 />
 
                 {/* Protected */}
@@ -94,6 +109,40 @@ const AppRoutes = () => {
                     <Route path="/purchases" element={<PurchaseList />} />
                     <Route path="/purchases/:id" element={<PurchaseDetails />} />
                     <Route path="/purchases/new" element={<PurchaseForm />} />
+
+                    <Route
+                        path="/sales"
+                        element={<POS />}
+                    />
+                    <Route
+                        path="/sales/history"
+                        element={<SalesList />}
+                    />
+                    <Route
+                        path="/sales/:id"
+                        element={<SaleDetails />}
+                    />
+
+                    <Route
+                        path="/transfers"
+                        element={<TransferList />}
+                    />
+                    <Route
+                        path="/transfers/new"
+                        element={<TransferForm />}
+                    />
+                    <Route
+                        path="/transfers/:id"
+                        element={<TransferDetails />}
+                    />
+
+                    <Route path="/branches" element={<BranchList />} />
+                    <Route path="/branches/new" element={<BranchForm />} />
+                    <Route path="/branches/:id/edit" element={<BranchForm />} />
+
+                    <Route path="/users" element={<UserList />} />
+                    <Route path="/users/new" element={<UserForm />} />
+                    <Route path="/users/:id/edit" element={<UserForm />} />
                 </Route>
 
             </Routes>

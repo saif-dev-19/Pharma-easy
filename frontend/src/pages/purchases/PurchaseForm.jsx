@@ -3,6 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { createPurchase } from "../../api/purchaseApi";
 import { getBatches } from "../../api/batchApi";
 import { useAuth } from "../../context/AuthContext";
+import { getSuppliers } from "../../api/supplierApi";
+import { getBranches } from "../../api/branchApi";
+
 
 const PurchaseForm = () => {
     const navigate = useNavigate();
@@ -12,6 +15,9 @@ const PurchaseForm = () => {
     const [loadingBatches, setLoadingBatches] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
+
+    const [suppliers, setSuppliers] = useState([]);
+    const [branches, setBranches] = useState([]);
 
     const [form, setForm] = useState({
         supplier: "",
@@ -30,19 +36,41 @@ const PurchaseForm = () => {
     ]);
 
     useEffect(() => {
-        const loadBatches = async () => {
+        const loadData = async () => {
             try {
-                const data = await getBatches();
-                setBatches(Array.isArray(data) ? data : []);
+                setLoadingBatches(true);
+                setError("");
+
+                const [batchData, supplierData, branchData] =
+                    await Promise.all([
+                        getBatches(),
+                        getSuppliers(),
+                        getBranches(),
+                    ]);
+
+                setBatches(
+                    Array.isArray(batchData) ? batchData : []
+                );
+
+                setSuppliers(
+                    Array.isArray(supplierData) ? supplierData : []
+                );
+
+                setBranches(
+                    Array.isArray(branchData) ? branchData : []
+                );
             } catch (err) {
-                console.error(err);
-                setError("Failed to load batches.");
+                console.error("Purchase Form Error:", err);
+                setError(
+                    err.response?.data?.detail ||
+                    "Failed to load purchase form data."
+                );
             } finally {
                 setLoadingBatches(false);
             }
         };
 
-        loadBatches();
+        loadData();
     }, []);
 
     const handleChange = (e) => {
@@ -208,15 +236,23 @@ const PurchaseForm = () => {
                                     Supplier ID
                                 </label>
 
-                                <input
+                                <select
                                     id="supplier"
                                     name="supplier"
-                                    type="number"
-                                    min="1"
                                     value={form.supplier}
                                     onChange={handleChange}
-                                    placeholder="Enter supplier ID"
-                                />
+                                >
+                                    <option value="">Select Supplier</option>
+
+                                    {suppliers.map((supplier) => (
+                                        <option key={supplier.id} value={supplier.id}>
+                                            {supplier.name}
+                                            {supplier.company_name
+                                                ? ` - ${supplier.company_name}`
+                                                : ""}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
 
                             <div className="form-group">
@@ -224,14 +260,21 @@ const PurchaseForm = () => {
                                     Branch
                                 </label>
 
-                                <input
+                                <select
                                     id="branch"
                                     name="branch"
-                                    type="number"
                                     value={form.branch}
                                     onChange={handleChange}
                                     disabled={user?.role === "MANAGER"}
-                                />
+                                >
+                                    <option value="">Select Branch</option>
+
+                                    {branches.map((branch) => (
+                                        <option key={branch.id} value={branch.id}>
+                                            {branch.name}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
 
                             <div className="form-group">

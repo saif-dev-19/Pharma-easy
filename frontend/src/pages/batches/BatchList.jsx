@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getBatches, deleteBatch, getBatchQR } from "../../api/batchApi";
@@ -45,6 +46,7 @@ const BatchList = () => {
 
     useEffect(() => {
         fetchBatches();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [expiryFilter]);
 
     const handleSearch = (e) => {
@@ -53,19 +55,22 @@ const BatchList = () => {
     };
 
     const handleShowQR = async (batch) => {
-    try {
-        const data = await getBatchQR(batch.id);
+        try {
+            const blob = await getBatchQR(batch.id);
 
-        window.open(data.qr_image, "_blank");
-    } catch (error) {
-        console.error("QR Error:", error);
+            const imageUrl = URL.createObjectURL(blob);
 
-        alert(
-            error.response?.data?.detail ||
-            "Failed to load QR code."
-        );
-    }
-};
+            window.open(imageUrl, "_blank");
+
+            setTimeout(() => {
+                URL.revokeObjectURL(imageUrl);
+            }, 10000);
+        } catch (error) {
+            console.error("QR Error:", error);
+
+            alert("Failed to load QR code.");
+        }
+    };  
 
     const handleDelete = async (id) => {
         const confirmed = window.confirm(
