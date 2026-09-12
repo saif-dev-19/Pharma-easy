@@ -4,11 +4,21 @@ from .models import StockTransfer, StockTransferItem
 
 
 class StockTransferItemSerializer(serializers.ModelSerializer):
+    medicine_name = serializers.CharField(
+        source="batch.medicine.name",
+        read_only=True
+    )
+
+    batch = serializers.CharField(
+        source="batch.batch_number",
+        read_only=True
+    )
     class Meta:
         model = StockTransferItem
         fields = [
             "id",
             "batch",
+            "medicine_name",
             "quantity",
         ]
         read_only_fields = ["id"]

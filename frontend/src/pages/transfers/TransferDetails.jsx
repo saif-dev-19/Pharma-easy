@@ -49,9 +49,11 @@ const TransferDetails = () => {
     };
 
     const getBatchNumber = (item) => {
+        console.log("Item batch:", item);
         return (
             item.batch?.batch_number ||
             item.batch_number ||
+            item.batch ||
             "-"
         );
     };
