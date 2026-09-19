@@ -1,20 +1,29 @@
 /* eslint-disable react-hooks/set-state-in-effect */
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+
 import { getUsers, deleteUser } from "../../api/userApi";
 
 function UserList() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searching, setSearching] = useState(false);
     const [error, setError] = useState("");
 
-    const fetchUsers = async () => {
+    const [search, setSearch] = useState("");
+
+    const fetchUsers = async (filters = {}) => {
         try {
-            setLoading(true);
+            setError("");
 
-            const data = await getUsers();
+            const data = await getUsers(filters);
 
-            setUsers(data.results || data);
+            setUsers(
+                Array.isArray(data)
+                    ? data
+                    : data.results || []
+            );
         } catch (err) {
             console.error(err);
 
@@ -22,14 +31,49 @@ function UserList() {
                 err.response?.data?.detail ||
                 "Failed to load users."
             );
-        } finally {
-            setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchUsers();
+        const loadUsers = async () => {
+            try {
+                setLoading(true);
+                await fetchUsers();
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadUsers();
     }, []);
+
+    const handleSearch = async () => {
+        try {
+            setSearching(true);
+            setError("");
+
+            await fetchUsers({
+                ...(search.trim() && {
+                    search: search.trim(),
+                }),
+            });
+        } finally {
+            setSearching(false);
+        }
+    };
+
+    const handleClear = async () => {
+        setSearch("");
+
+        try {
+            setSearching(true);
+            setError("");
+
+            await fetchUsers();
+        } finally {
+            setSearching(false);
+        }
+    };
 
     const handleDelete = async (id) => {
         const confirmed = window.confirm(
@@ -40,7 +84,11 @@ function UserList() {
 
         try {
             await deleteUser(id);
-            fetchUsers();
+            await fetchUsers({
+                ...(search.trim() && {
+                    search: search.trim(),
+                }),
+            });
         } catch (err) {
             alert(
                 err.response?.data?.detail ||
@@ -57,7 +105,7 @@ function UserList() {
         );
     }
 
-    if (error) {
+    if (error && users.length === 0) {
         return (
             <div className="page-error">
                 {error}
@@ -68,10 +116,13 @@ function UserList() {
     return (
         <div className="page-container">
 
+            {/* Header */}
             <div className="page-header">
                 <div>
                     <h1>Users</h1>
-                    <p>Manage pharmacy staff and managers</p>
+                    <p>
+                        Manage pharmacy staff and managers
+                    </p>
                 </div>
 
                 <Link
@@ -82,23 +133,85 @@ function UserList() {
                 </Link>
             </div>
 
+            {/* Error */}
+            {error && (
+                <div className="page-error">
+                    {error}
+                </div>
+            )}
+
             <div className="data-card">
 
+                {/* Card Header */}
                 <div className="data-card-header">
-                    <h2>User List</h2>
+                    <div>
+                        <h2>User List</h2>
 
-                    <span>
-                        {users.length} user
-                        {users.length !== 1 ? "s" : ""}
-                    </span>
+                        <span>
+                            {users.length} user
+                            {users.length !== 1 ? "s" : ""}
+                        </span>
+                    </div>
                 </div>
 
+                {/* Search */}
+                <div className="user-filter">
+
+                    <div className="user-filter-field">
+                        <label htmlFor="userSearch">
+                            Username / Email
+                        </label>
+
+                        <input
+                            id="userSearch"
+                            type="text"
+                            value={search}
+                            onChange={(e) =>
+                                setSearch(e.target.value)
+                            }
+                            placeholder="Search username or email..."
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    handleSearch();
+                                }
+                            }}
+                        />
+                    </div>
+
+                    <div className="user-filter-actions">
+
+                        <button
+                            type="button"
+                            className="primary-button"
+                            onClick={handleSearch}
+                            disabled={searching}
+                        >
+                            {searching
+                                ? "Searching..."
+                                : "Search"}
+                        </button>
+
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={handleClear}
+                            disabled={searching}
+                        >
+                            Clear
+                        </button>
+
+                    </div>
+
+                </div>
+
+                {/* Users Table */}
                 {users.length === 0 ? (
                     <div className="empty-state">
                         No users found.
                     </div>
                 ) : (
                     <div className="table-container">
+
                         <table className="data-table">
 
                             <thead>
@@ -182,10 +295,12 @@ function UserList() {
                             </tbody>
 
                         </table>
+
                     </div>
                 )}
 
             </div>
+
         </div>
     );
 }

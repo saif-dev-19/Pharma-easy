@@ -6,7 +6,7 @@ from apps.authentication.permissions import IsAdminOrManager
 from .models import StockTransfer
 from .serializers import StockTransferSerializer
 from .services import create_stock_transfer
-
+from django.db.models import Q
 
 class StockTransferViewSet(viewsets.ModelViewSet):
 
@@ -14,8 +14,6 @@ class StockTransferViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrManager]
 
     def get_queryset(self):
-        user = self.request.user
-
         queryset = (
             StockTransfer.objects
             .select_related(
@@ -24,19 +22,69 @@ class StockTransferViewSet(viewsets.ModelViewSet):
                 "created_by",
             )
             .prefetch_related(
-                "items",
+                "items__batch__medicine"
             )
         )
 
-        if user.role == "ADMIN":
-            return queryset
+        user = self.request.user
 
-        # Manager can see transfers involving their branch
-        return queryset.filter(
-            from_branch=user.branch
-        ) | queryset.filter(
-            to_branch=user.branch
+        # Branch restriction
+        if user.role != "ADMIN":
+            queryset = queryset.filter(
+                Q(from_branch=user.branch)
+                | Q(to_branch=user.branch)
+            )
+
+        # From branch
+        from_branch = self.request.query_params.get(
+            "from_branch"
         )
+
+        if from_branch:
+            queryset = queryset.filter(
+                from_branch_id=from_branch
+            )
+
+        # To branch
+        to_branch = self.request.query_params.get(
+            "to_branch"
+        )
+
+        if to_branch:
+            queryset = queryset.filter(
+                to_branch_id=to_branch
+            )
+
+        # Status
+        status_value = self.request.query_params.get(
+            "status"
+        )
+
+        if status_value:
+            queryset = queryset.filter(
+                status=status_value
+            )
+
+        # Date range
+        date_from = self.request.query_params.get(
+            "date_from"
+        )
+
+        date_to = self.request.query_params.get(
+            "date_to"
+        )
+
+        if date_from:
+            queryset = queryset.filter(
+                transfer_date__gte=date_from
+            )
+
+        if date_to:
+            queryset = queryset.filter(
+                transfer_date__lte=date_to
+            )
+
+        return queryset
 
     def create(self, request, *args, **kwargs):
 

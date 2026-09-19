@@ -39,16 +39,26 @@ from rest_framework import viewsets
 from .models import User
 from .permissions import IsAdmin
 from .serializers import UserManagementSerializer
-
+from django.db.models import Q
 
 class UserManagementViewSet(viewsets.ModelViewSet):
     serializer_class = UserManagementSerializer
     permission_classes = [IsAdmin]
 
     def get_queryset(self):
-        return (
+        queryset = (
             User.objects
             .select_related("branch")
             .exclude(role=User.Role.ADMIN)
             .order_by("-id")
         )
+
+        search = self.request.query_params.get("search")
+
+        if search:
+            queryset = queryset.filter(
+                Q(username__icontains=search)
+                | Q(email__icontains=search)
+            )
+
+        return queryset

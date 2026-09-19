@@ -2222,3 +2222,189 @@
         width: 100%;
     }
 }
+
+/*==========================
+   Transfer History CSS
+==========================*/
+
+.transfer-filter {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    flex-wrap: wrap;
+}
+
+.transfer-filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.transfer-filter-field label {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.transfer-filter-field input,
+.transfer-filter-field select {
+    min-width: 180px;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #ffffff;
+    font-size: 14px;
+    outline: none;
+}
+
+.transfer-filter-field input:focus,
+.transfer-filter-field select:focus {
+    border-color: #2563eb;
+}
+
+.transfer-filter-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.secondary-button {
+    padding: 10px 18px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #ffffff;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.secondary-button:hover {
+    background: #f3f4f6;
+}
+
+.secondary-button:disabled,
+.primary-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Responsive */
+
+@media (max-width: 1100px) {
+    .transfer-filter-field input,
+    .transfer-filter-field select {
+        min-width: 160px;
+    }
+}
+
+@media (max-width: 768px) {
+    .transfer-filter {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .transfer-filter-field {
+        width: 100%;
+    }
+
+    .transfer-filter-field input,
+    .transfer-filter-field select {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .transfer-filter-actions {
+        width: 100%;
+    }
+
+    .transfer-filter-actions button {
+        flex: 1;
+    }
+}
+
+
+/* =========================
+   User List CSS
+========================= */
+
+.user-filter {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    flex-wrap: wrap;
+}
+
+.user-filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.user-filter-field label {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.user-filter-field input {
+    width: 280px;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #ffffff;
+    font-size: 14px;
+    outline: none;
+}
+
+.user-filter-field input:focus {
+    border-color: #2563eb;
+}
+
+.user-filter-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.secondary-button {
+    padding: 10px 18px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #ffffff;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.secondary-button:hover {
+    background: #f3f4f6;
+}
+
+.secondary-button:disabled,
+.primary-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .user-filter {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .user-filter-field {
+        width: 100%;
+    }
+
+    .user-filter-field input {
+        width: 100%;
+    }
+
+    .user-filter-actions {
+        width: 100%;
+    }
+
+    .user-filter-actions button {
+        flex: 1;
+    }
+}
