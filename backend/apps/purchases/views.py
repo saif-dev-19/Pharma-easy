@@ -42,20 +42,51 @@ class PurchaseViewSet(viewsets.ModelViewSet):
         )
 
     def get_queryset(self):
-        user = self.request.user
-
-        queryset = Purchase.objects.select_related(
-            "supplier",
-            "branch",
-            "created_by",
-        ).prefetch_related(
-            "items",
+        queryset = (
+            Purchase.objects
+            .select_related("supplier", "branch", "created_by")
+            .prefetch_related("items__batch__medicine")
         )
 
-        if user.role == "ADMIN":
-            return queryset
+        user = self.request.user
 
-        return queryset.filter(branch=user.branch)
+        # Branch restriction
+        if user.role != "ADMIN":
+            queryset = queryset.filter(branch=user.branch)
+
+        # Invoice search
+        invoice = self.request.query_params.get("invoice")
+
+        if invoice:
+            queryset = queryset.filter(
+                invoice_number__icontains=invoice
+            )
+
+        # Supplier search
+        supplier = self.request.query_params.get("supplier")
+
+        if supplier:
+            queryset = queryset.filter(
+                supplier__name__icontains=supplier
+            ) | queryset.filter(
+                supplier__company_name__icontains=supplier
+            )
+
+        # Date range
+        date_from = self.request.query_params.get("date_from")
+        date_to = self.request.query_params.get("date_to")
+
+        if date_from:
+            queryset = queryset.filter(
+                purchase_date__gte=date_from
+            )
+
+        if date_to:
+            queryset = queryset.filter(
+                purchase_date__lte=date_to
+            )
+
+        return queryset
 
 
 

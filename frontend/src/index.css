@@ -2157,3 +2157,68 @@
         font-size: 24px;
     }
 }
+
+/* =========================
+   purchases CSS
+========================= */
+
+.purchase-filter {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    flex-wrap: wrap;
+}
+
+.purchase-filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.purchase-filter-field label {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.purchase-filter-field input {
+    min-width: 180px;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+}
+
+.purchase-filter-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.secondary-button {
+    padding: 10px 18px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+}
+
+.secondary-button:hover {
+    background: #f3f4f6;
+}
+
+@media (max-width: 768px) {
+    .purchase-filter {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .purchase-filter-field input {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .purchase-filter-actions {
+        width: 100%;
+    }
+}
