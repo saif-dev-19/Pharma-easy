@@ -15,10 +15,14 @@ class MedicineSerializer(serializers.ModelSerializer):
             "strength",
             "dosage_form",
             "manufacturer",
+            "image",
             "is_active",
             "created_at",
         ]
-        read_only_fields = ["id", "created_at"]
+        read_only_fields = [
+            "id",
+            "created_at",
+        ]
 
 
 
@@ -69,24 +73,27 @@ class QRMedicineSerializer(serializers.ModelSerializer):
     strength = serializers.CharField(source="medicine.strength")
     dosage_form = serializers.CharField(source="medicine.dosage_form")
     manufacturer = serializers.CharField(source="medicine.manufacturer")
+    medicine_image = serializers.ImageField(
+    source="medicine.image",
+    read_only=True
+)
 
     is_expired = serializers.SerializerMethodField()
 
-    class Meta:
-        model = Batch
-        fields = [
-            "qr_code",
-            "medicine_name",
-            "generic_name",
-            "strength",
-            "dosage_form",
-            "manufacturer",
-            "batch_number",
-            "expiry_date",
-            "pack_size",
-            "selling_price",
-            "is_expired",
-        ]
+    fields = [
+        "qr_code",
+        "medicine_name",
+        "generic_name",
+        "strength",
+        "dosage_form",
+        "manufacturer",
+        "medicine_image",
+        "batch_number",
+        "expiry_date",
+        "pack_size",
+        "selling_price",
+        "is_expired",
+    ]
 
     def get_is_expired(self, obj):
         return obj.expiry_date < timezone.now().date()

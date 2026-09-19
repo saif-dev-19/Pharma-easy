@@ -8,12 +8,14 @@ from .models import Medicine, Batch
 from .serializers import BatchSerializer, MedicineSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
+from rest_framework.permissions import AllowAny
 
 
 class MedicineViewSet(viewsets.ModelViewSet):
     queryset = Medicine.objects.all()
     serializer_class = MedicineSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    # permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         queryset = Medicine.objects.all()
