@@ -37,3 +37,9 @@ export const getBatchQR = async (id) => {
 
     return response.data;
 };
+
+export const generateBatchNumber = async () => {
+    const response = await api.get("/generate-number/");
+
+    return response.data;
+};

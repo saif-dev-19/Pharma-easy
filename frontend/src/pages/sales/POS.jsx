@@ -5,6 +5,8 @@ import { getBatches } from "../../api/batchApi";
 import { createSale } from "../../api/saleApi";
 import { useAuth } from "../../context/AuthContext";
 
+import "./POS.css";
+
 const POS = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -79,7 +81,8 @@ const POS = () => {
 
         return batches
             .filter((batch) => {
-                const medicineName = getMedicineName(batch).toLowerCase();
+                const medicineName =
+                    getMedicineName(batch).toLowerCase();
 
                 const batchNumber = (
                     batch.batch_number || ""
@@ -110,11 +113,10 @@ const POS = () => {
                         ? {
                               ...item,
                               quantity: item.quantity + 1,
-                              subtotal:
-                                  (
-                                      (item.quantity + 1) *
-                                      Number(item.selling_price)
-                                  ).toFixed(2),
+                              subtotal: (
+                                  (item.quantity + 1) *
+                                  Number(item.selling_price)
+                              ).toFixed(2),
                           }
                         : item
                 )
@@ -123,23 +125,31 @@ const POS = () => {
             return;
         }
 
-        const sellingPrice = Number(batch.selling_price || 0);
+        const sellingPrice = Number(
+            batch.selling_price || 0
+        );
 
         setCart([
             ...cart,
             {
                 batch: batch.id,
-                medicine_name: getMedicineDisplayName(batch),
+                medicine_name:
+                    getMedicineDisplayName(batch),
                 batch_number: batch.batch_number,
                 quantity: 1,
-                selling_price: sellingPrice.toFixed(2),
-                subtotal: sellingPrice.toFixed(2),
+                selling_price:
+                    sellingPrice.toFixed(2),
+                subtotal:
+                    sellingPrice.toFixed(2),
             },
         ]);
     };
 
     const updateQuantity = (batchId, quantity) => {
-        const newQuantity = Math.max(1, Number(quantity) || 1);
+        const newQuantity = Math.max(
+            1,
+            Number(quantity) || 1
+        );
 
         setCart(
             cart.map((item) =>
@@ -194,11 +204,16 @@ const POS = () => {
         setSuccess("");
 
         if (!cart.length) {
-            setError("Please add at least one medicine.");
+            setError(
+                "Please add at least one medicine."
+            );
             return;
         }
 
-        if (!user?.branch_id && user.role != "ADMIN") {
+        if (
+            !user?.branch_id &&
+            user?.role !== "ADMIN"
+        ) {
             setError(
                 "Your account is not assigned to a branch."
             );
@@ -213,7 +228,9 @@ const POS = () => {
         }
 
         if (paid < 0) {
-            setError("Paid amount cannot be negative.");
+            setError(
+                "Paid amount cannot be negative."
+            );
             return;
         }
 
@@ -222,7 +239,7 @@ const POS = () => {
 
             const payload = {
                 invoice_number: `POS-${Date.now()}`,
-                branch: user.branch_id || 1, // Default to 1 if user has no branch
+                branch: user.branch_id || 1,
                 sale_date: new Date()
                     .toISOString()
                     .split("T")[0],
@@ -255,13 +272,15 @@ const POS = () => {
             setDiscount("");
             setPaidAmount("");
         } catch (err) {
-            console.log("SALE ERROR:", err.response?.data);
-            console.log("SALE STATUS:", err.response?.status);
             console.error("Sale error:", err);
 
-            const responseData = err.response?.data;
+            const responseData =
+                err.response?.data;
 
-            if (typeof responseData === "object") {
+            if (
+                responseData &&
+                typeof responseData === "object"
+            ) {
                 const messages = Object.values(
                     responseData
                 )
@@ -270,7 +289,7 @@ const POS = () => {
 
                 setError(
                     messages ||
-                    "Failed to complete sale."
+                        "Failed to complete sale."
                 );
             } else {
                 setError(
@@ -284,15 +303,17 @@ const POS = () => {
 
     if (loading) {
         return (
-            <div className="page-loading">
-                Loading POS...
+            <div className="pos-page-loading">
+                <div className="pos-loading-spinner" />
+                <span>Loading POS...</span>
             </div>
         );
     }
 
     return (
-        <div className="page-container">
-            <div className="page-header">
+        <div className="pos-page">
+            {/* HEADER */}
+            <div className="pos-header">
                 <div>
                     <h1>Sales / POS</h1>
                     <p>
@@ -302,194 +323,142 @@ const POS = () => {
 
                 <button
                     type="button"
-                    className="secondary-button"
+                    className="pos-history-btn"
                     onClick={() =>
-                        navigate("/sales/history")
+                        navigate(
+                            "/sales/history"
+                        )
                     }
                 >
                     Sales History
                 </button>
             </div>
 
+            {/* ALERTS */}
             {error && (
-                <div className="page-error">
+                <div className="pos-alert pos-alert-error">
                     {error}
                 </div>
             )}
 
             {success && (
-                <div className="success-message">
+                <div className="pos-alert pos-alert-success">
                     {success}
                 </div>
             )}
 
-            <div className="pos-layout">
-                {/* LEFT SIDE */}
-                <div className="pos-products">
-                    <div className="data-card">
-                        <div className="data-card-header">
-                            <div>
-                                <h2>
-                                    Select Medicine
-                                </h2>
-                                <p>
-                                    Search by medicine,
-                                    batch or QR code
-                                </p>
-                            </div>
+            {/* MAIN POS */}
+            <div className="pos-main-grid">
+                {/* PRODUCTS */}
+                <section className="pos-panel pos-products-panel">
+                    <div className="pos-panel-header">
+                        <div>
+                            <h2>Select Medicine</h2>
+                            <p>
+                                Search medicine,
+                                batch or QR code
+                            </p>
                         </div>
 
-                        <div className="pos-search">
-                            <input
-                                type="text"
-                                placeholder="Search medicine, batch or QR code..."
-                                value={search}
-                                onChange={(event) =>
-                                    setSearch(
-                                        event.target.value
-                                    )
+                        <span className="pos-count">
+                            {filteredBatches.length}
+                        </span>
+                    </div>
+
+                    <div className="pos-search-box">
+                        <span className="pos-search-icon">
+                            🔍
+                        </span>
+
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(event) =>
+                                setSearch(
+                                    event.target
+                                        .value
+                                )
+                            }
+                            placeholder="Search medicine, batch or QR code..."
+                        />
+
+                        {search && (
+                            <button
+                                type="button"
+                                className="pos-clear-search"
+                                onClick={() =>
+                                    setSearch("")
                                 }
-                            />
-                        </div>
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
 
-                        <div className="pos-product-list">
-                            {filteredBatches.length === 0 ? (
-                                <div className="empty-state">
-                                    No medicine found.
+                    <div className="pos-product-list">
+                        {filteredBatches.length ===
+                        0 ? (
+                            <div className="pos-empty">
+                                <div className="pos-empty-icon">
+                                    +
                                 </div>
-                            ) : (
-                                filteredBatches.map(
-                                    (batch) => (
-                                        <div
-                                            key={batch.id}
-                                            className="pos-product-card"
-                                        >
-                                            <div>
+
+                                <strong>
+                                    No medicine found
+                                </strong>
+
+                                <span>
+                                    Try another
+                                    medicine name
+                                    or batch
+                                </span>
+                            </div>
+                        ) : (
+                            filteredBatches.map(
+                                (batch) => (
+                                    <div
+                                        key={
+                                            batch.id
+                                        }
+                                        className="pos-product"
+                                    >
+                                        <div className="pos-product-main">
+                                        
+
+                                            <div className="pos-product-info">
                                                 <h3>
                                                     {getMedicineDisplayName(
                                                         batch
                                                     )}
                                                 </h3>
 
-                                                <p>
-                                                    Batch:{" "}
-                                                    {batch.batch_number ||
-                                                        "-"}
-                                                </p>
+                                                <div className="pos-product-meta">
+                                                    <span>
+                                                        Batch:{" "}
+                                                        <strong>
+                                                            {batch.batch_number ||
+                                                                "-"}
+                                                        </strong>
+                                                    </span>
 
-                                                <p>
-                                                    Price: ৳
-                                                    {Number(
-                                                        batch.selling_price ||
-                                                            0
-                                                    ).toFixed(
-                                                        2
+                                                    {batch.qr_code && (
+                                                        <span>
+                                                            QR:{" "}
+                                                            {
+                                                                batch.qr_code
+                                                            }
+                                                        </span>
                                                     )}
-                                                </p>
-
-                                                {batch.qr_code && (
-                                                    <code>
-                                                        {
-                                                            batch.qr_code
-                                                        }
-                                                    </code>
-                                                )}
+                                                </div>
                                             </div>
-
-                                            <button
-                                                type="button"
-                                                className="primary-button"
-                                                onClick={() =>
-                                                    addToCart(
-                                                        batch
-                                                    )
-                                                }
-                                            >
-                                                Add
-                                            </button>
-                                        </div>
-                                    )
-                                )
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* RIGHT SIDE */}
-                <div className="pos-cart">
-                    <div className="data-card">
-                        <div className="data-card-header">
-                            <div>
-                                <h2>
-                                    Current Sale
-                                </h2>
-                                <p>
-                                    Branch:{" "}
-                                    {user?.branch_id ||
-                                        "-"}
-                                </p>
-                            </div>
-                        </div>
-
-                        {cart.length === 0 ? (
-                            <div className="empty-state">
-                                Cart is empty.
-                            </div>
-                        ) : (
-                            <div className="pos-cart-items">
-                                {cart.map((item) => (
-                                    <div
-                                        key={item.batch}
-                                        className="pos-cart-item"
-                                    >
-                                        <div className="pos-cart-info">
-                                            <h3>
-                                                {
-                                                    item.medicine_name
-                                                }
-                                            </h3>
-
-                                            <span>
-                                                Batch:{" "}
-                                                {
-                                                    item.batch_number
-                                                }
-                                            </span>
-
-                                            <span>
-                                                ৳
-                                                {Number(
-                                                    item.selling_price
-                                                ).toFixed(
-                                                    2
-                                                )}{" "}
-                                                / unit
-                                            </span>
                                         </div>
 
-                                        <div className="pos-cart-actions">
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                value={
-                                                    item.quantity
-                                                }
-                                                onChange={(
-                                                    event
-                                                ) =>
-                                                    updateQuantity(
-                                                        item.batch,
-                                                        event
-                                                            .target
-                                                            .value
-                                                    )
-                                                }
-                                            />
-
-                                            <strong>
+                                        <div className="pos-product-right">
+                                            <strong className="pos-product-price">
                                                 ৳
                                                 {Number(
-                                                    item.subtotal
+                                                    batch.selling_price ||
+                                                        0
                                                 ).toFixed(
                                                     2
                                                 )}
@@ -497,76 +466,239 @@ const POS = () => {
 
                                             <button
                                                 type="button"
-                                                className="delete-button"
+                                                className="pos-add-btn"
                                                 onClick={() =>
-                                                    removeFromCart(
-                                                        item.batch
+                                                    addToCart(
+                                                        batch
                                                     )
                                                 }
                                             >
-                                                Remove
+                                                + Add
                                             </button>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
+                                )
+                            )
                         )}
+                    </div>
+                </section>
 
-                        <form
-                            onSubmit={handleSubmit}
-                            className="pos-summary"
-                        >
-                            <div className="summary-row">
-                                <span>
-                                    Subtotal
-                                </span>
+                {/* CART */}
+                <section className="pos-panel pos-cart-panel">
+                    <div className="pos-panel-header">
+                        <div>
+                            <h2>Current Sale</h2>
+
+                            <p>
+                                Branch{" "}
+                                {user?.branch_id ||
+                                    "-"}
+                            </p>
+                        </div>
+
+                        <div className="pos-cart-badge">
+                            {cart.length}{" "}
+                            {cart.length === 1
+                                ? "item"
+                                : "items"}
+                        </div>
+                    </div>
+
+                    <div className="pos-cart-content">
+                        {cart.length === 0 ? (
+                            <div className="pos-cart-empty">
+                                <div className="pos-cart-empty-icon">
+                                    🛒
+                                </div>
 
                                 <strong>
-                                    ৳
-                                    {subtotal.toFixed(
-                                        2
-                                    )}
+                                    Cart is empty
                                 </strong>
-                            </div>
 
-                            <div className="form-group">
-                                <label htmlFor="discount">
-                                    Discount
-                                </label>
+                                <span>
+                                    Add medicines
+                                    from the left
+                                    panel
+                                </span>
+                            </div>
+                        ) : (
+                            <div className="pos-cart-list">
+                                {cart.map(
+                                    (item) => (
+                                        <div
+                                            key={
+                                                item.batch
+                                            }
+                                            className="pos-cart-product"
+                                        >
+                                            <div className="pos-cart-product-info">
+                                                <h3>
+                                                    {
+                                                        item.medicine_name
+                                                    }
+                                                </h3>
+
+                                                <span>
+                                                    Batch:{" "}
+                                                    {
+                                                        item.batch_number
+                                                    }
+                                                </span>
+
+                                                <small>
+                                                    ৳
+                                                    {Number(
+                                                        item.selling_price
+                                                    ).toFixed(
+                                                        2
+                                                    )}{" "}
+                                                    / unit
+                                                </small>
+                                            </div>
+
+                                            <div className="pos-cart-controls">
+                                                <div className="pos-quantity">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            updateQuantity(
+                                                                item.batch,
+                                                                item.quantity -
+                                                                    1
+                                                            )
+                                                        }
+                                                    >
+                                                        −
+                                                    </button>
+
+                                                    <input
+                                                        type="number"
+                                                        min="1"
+                                                        value={
+                                                            item.quantity
+                                                        }
+                                                        onChange={(
+                                                            event
+                                                        ) =>
+                                                            updateQuantity(
+                                                                item.batch,
+                                                                event
+                                                                    .target
+                                                                    .value
+                                                            )
+                                                        }
+                                                    />
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            updateQuantity(
+                                                                item.batch,
+                                                                item.quantity +
+                                                                    1
+                                                            )
+                                                        }
+                                                    >
+                                                        +
+                                                    </button>
+                                                </div>
+
+                                                <strong>
+                                                    ৳
+                                                    {Number(
+                                                        item.subtotal
+                                                    ).toFixed(
+                                                        2
+                                                    )}
+                                                </strong>
+
+                                                <button
+                                                    type="button"
+                                                    className="pos-remove-btn"
+                                                    onClick={() =>
+                                                        removeFromCart(
+                                                            item.batch
+                                                        )
+                                                    }
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* SUMMARY */}
+                    <form
+                        onSubmit={handleSubmit}
+                        className="pos-checkout"
+                    >
+                        <div className="pos-summary-row">
+                            <span>
+                                Subtotal
+                            </span>
+
+                            <strong>
+                                ৳
+                                {subtotal.toFixed(
+                                    2
+                                )}
+                            </strong>
+                        </div>
+
+                        <div className="pos-input-row">
+                            <label htmlFor="discount">
+                                Discount
+                            </label>
+
+                            <div className="pos-money-input">
+                                <span>৳</span>
 
                                 <input
                                     id="discount"
                                     type="number"
                                     min="0"
                                     step="0.01"
-                                    value={discount}
-                                    onChange={(event) =>
+                                    value={
+                                        discount
+                                    }
+                                    onChange={(
+                                        event
+                                    ) =>
                                         setDiscount(
-                                            event.target
+                                            event
+                                                .target
                                                 .value
                                         )
                                     }
                                     placeholder="0.00"
                                 />
                             </div>
+                        </div>
 
-                            <div className="summary-row total-row">
-                                <span>
-                                    Total
-                                </span>
+                        <div className="pos-total-row">
+                            <span>
+                                Total
+                            </span>
 
-                                <strong>
-                                    ৳
-                                    {totalAmount.toFixed(
-                                        2
-                                    )}
-                                </strong>
-                            </div>
+                            <strong>
+                                ৳
+                                {totalAmount.toFixed(
+                                    2
+                                )}
+                            </strong>
+                        </div>
 
-                            <div className="form-group">
-                                <label htmlFor="paidAmount">
-                                    Paid Amount
-                                </label>
+                        <div className="pos-input-row">
+                            <label htmlFor="paidAmount">
+                                Paid Amount
+                            </label>
+
+                            <div className="pos-money-input">
+                                <span>৳</span>
 
                                 <input
                                     id="paidAmount"
@@ -576,44 +708,45 @@ const POS = () => {
                                     value={
                                         paidAmount
                                     }
-                                    onChange={(event) =>
+                                    onChange={(
+                                        event
+                                    ) =>
                                         setPaidAmount(
-                                            event.target
+                                            event
+                                                .target
                                                 .value
                                         )
                                     }
                                     placeholder="0.00"
                                 />
                             </div>
+                        </div>
 
-                            <div className="summary-row">
-                                <span>
-                                    Due
-                                </span>
+                        <div className="pos-due-row">
+                            <span>Due</span>
 
-                                <strong>
-                                    ৳
-                                    {dueAmount.toFixed(
-                                        2
-                                    )}
-                                </strong>
-                            </div>
+                            <strong>
+                                ৳
+                                {dueAmount.toFixed(
+                                    2
+                                )}
+                            </strong>
+                        </div>
 
-                            <button
-                                type="submit"
-                                className="primary-button pos-submit"
-                                disabled={
-                                    submitting ||
-                                    cart.length === 0
-                                }
-                            >
-                                {submitting
-                                    ? "Processing..."
-                                    : "Complete Sale"}
-                            </button>
-                        </form>
-                    </div>
-                </div>
+                        <button
+                            type="submit"
+                            className="pos-complete-btn"
+                            disabled={
+                                submitting ||
+                                cart.length === 0
+                            }
+                        >
+                            {submitting
+                                ? "Processing..."
+                                : "Complete Sale"}
+                        </button>
+                    </form>
+                </section>
             </div>
         </div>
     );

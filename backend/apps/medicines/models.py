@@ -34,7 +34,7 @@ class Batch(models.Model):
         on_delete=models.PROTECT,
         related_name="batches"
     )
-    batch_number = models.CharField(max_length=100)
+    batch_number = models.CharField(max_length=100,unique=True,editable=False)
     expiry_date = models.DateField()
     pack_size = models.PositiveIntegerField()
     purchase_price = models.DecimalField(

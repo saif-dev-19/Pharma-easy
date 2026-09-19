@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -48,6 +49,7 @@ const MedicineList = () => {
 
     useEffect(() => {
         fetchMedicines();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeFilter]);
 
     const handleSearch = (e) => {
@@ -160,14 +162,17 @@ const MedicineList = () => {
                         <table className="data-table">
                             <thead>
                                 <tr>
+                                    <th>Image</th>
                                     <th>Name</th>
                                     <th>Generic Name</th>
                                     <th>Strength</th>
                                     <th>Dosage Form</th>
                                     <th>Manufacturer</th>
                                     <th>Status</th>
+                                    <th>Details</th>
 
                                     {user?.role === "ADMIN" && (
+                                        
                                         <th>Actions</th>
                                     )}
                                 </tr>
@@ -177,7 +182,22 @@ const MedicineList = () => {
                                 {medicines.length > 0 ? (
                                     medicines.map((medicine) => (
                                         <tr key={medicine.id}>
-
+                                            <td>
+                                                {medicine.image ? (
+                                                    <img
+                                                        src={medicine.image}
+                                                        alt={medicine.name}
+                                                        style={{
+                                                            width: "50px",
+                                                            height: "50px",
+                                                            objectFit: "cover",
+                                                            borderRadius: "8px",
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    "-"
+                                                )}
+                                            </td>
                                             <td>
                                                 <strong>
                                                     {medicine.name}
@@ -218,6 +238,15 @@ const MedicineList = () => {
                                                 </span>
                                             </td>
 
+                                            <td>
+                                                <Link
+                                                    to={`/medicines/${medicine.id}`}
+                                                    className="secondary-button"
+                                                >
+                                                    Details
+                                                </Link>
+                                            </td>
+
                                             {user?.role === "ADMIN" && (
                                                 <td>
                                                     <div className="action-buttons">
@@ -251,8 +280,8 @@ const MedicineList = () => {
                                         <td
                                             colSpan={
                                                 user?.role === "ADMIN"
-                                                    ? 7
-                                                    : 6
+                                                    ? 9
+                                                    : 8
                                             }
                                             className="empty-state"
                                         >

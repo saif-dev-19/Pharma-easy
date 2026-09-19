@@ -131,3 +131,45 @@ class BatchQRImageView(APIView):
             qr_image.getvalue(),
             content_type="image/png",
         )
+
+
+
+from datetime import date
+
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .models import Batch
+
+
+class GenerateBatchNumberView(APIView):
+    
+    def get(self, request):
+        year = date.today().year
+
+        prefix = f"BTH-{year}-"
+
+        last_batch = (
+            Batch.objects
+            .filter(batch_number__startswith=prefix)
+            .order_by("-batch_number")
+            .first()
+        )
+
+        if last_batch:
+            last_number = int(
+                last_batch.batch_number.replace(prefix, "")
+            )
+            next_number = last_number + 1
+        else:
+            next_number = 1
+
+        batch_number = f"{prefix}{next_number:06d}"
+
+        return Response(
+            {
+                "batch_number": batch_number
+            },
+            status=status.HTTP_200_OK,
+        )

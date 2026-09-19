@@ -27,7 +27,7 @@ import BranchForm from "../pages/branches/BranchForm";
 import UserList from "../pages/users/UserList";
 import UserForm from "../pages/users/UserForm";
 import QRMedicine from "../pages/qr/QRMedicine";
-
+import MedicineDetails from "../pages/medicines/MedicineDetails";
 
 
 
@@ -66,6 +66,10 @@ const AppRoutes = () => {
                     <Route
                         path="/medicines/new"
                         element={<MedicineForm />}
+                    />
+                    <Route
+                        path="/medicines/:id"
+                        element={<MedicineDetails />}
                     />
                     <Route
                         path="/medicines/:id/edit"

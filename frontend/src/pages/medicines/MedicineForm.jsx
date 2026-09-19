@@ -20,6 +20,7 @@ const MedicineForm = () => {
         strength: "",
         dosage_form: "",
         manufacturer: "",
+        image: null,
         is_active: true,
     });
 
@@ -36,14 +37,15 @@ const MedicineForm = () => {
             try {
                 const data = await getMedicine(id);
 
-                setFormData({
-                    name: data.name || "",
-                    generic_name: data.generic_name || "",
-                    strength: data.strength || "",
-                    dosage_form: data.dosage_form || "",
-                    manufacturer: data.manufacturer || "",
-                    is_active: data.is_active,
-                });
+            setFormData({
+                name: data.name || "",
+                generic_name: data.generic_name || "",
+                strength: data.strength || "",
+                dosage_form: data.dosage_form || "",
+                manufacturer: data.manufacturer || "",
+                image: null,
+                is_active: data.is_active,
+            });
             } catch (error) {
                 console.error("Medicine Error:", error);
 
@@ -59,14 +61,19 @@ const MedicineForm = () => {
         fetchMedicine();
     }, [id, isEditMode]);
 
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
+        const handleChange = (e) => {
+            const { name, value, type, checked, files } = e.target;
 
-        setFormData((previous) => ({
-            ...previous,
-            [name]: type === "checkbox" ? checked : value,
-        }));
-    };
+            setFormData((previous) => ({
+                ...previous,
+                [name]:
+                    type === "checkbox"
+                        ? checked
+                        : type === "file"
+                        ? files[0]
+                        : value,
+            }));
+        };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -75,10 +82,26 @@ const MedicineForm = () => {
         setSaving(true);
 
         try {
+            const data = new FormData();
+
+            data.append("name", formData.name);
+            data.append("generic_name", formData.generic_name);
+            data.append("strength", formData.strength);
+            data.append("dosage_form", formData.dosage_form);
+            data.append("manufacturer", formData.manufacturer);
+            data.append("is_active", formData.is_active);
+
+            if (formData.image) {
+                data.append("image", formData.image);
+            }
+
+            console.log("IMAGE:", formData.image);
+            console.log("IS FILE:", formData.image instanceof File);
+
             if (isEditMode) {
-                await updateMedicine(id, formData);
+                await updateMedicine(id, data);
             } else {
-                await createMedicine(formData);
+                await createMedicine(data);
             }
 
             navigate("/medicines");
@@ -238,6 +261,25 @@ const MedicineForm = () => {
                                     onChange={handleChange}
                                     placeholder="e.g. Beximco Pharmaceuticals"
                                 />
+                            </div>
+
+                            <div className="form-group full-width">
+                                <label>
+                                    Medicine Image
+                                </label>
+
+                                <input
+                                    type="file"
+                                    name="image"
+                                    accept="image/*"
+                                    onChange={handleChange}
+                                />
+
+                                {isEditMode && formData.image === null && (
+                                    <small>
+                                        Leave empty to keep the existing image.
+                                    </small>
+                                )}
                             </div>
 
                         </div>
