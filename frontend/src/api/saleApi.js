@@ -1,9 +1,5 @@
 import api from "./axios";
 
-export const getSales = async (params = {}) => {
-    const response = await api.get("/sales/", { params });
-    return response.data;
-};
 
 export const getSale = async (id) => {
     const response = await api.get(`/sales/${id}/`);
@@ -12,5 +8,13 @@ export const getSale = async (id) => {
 
 export const createSale = async (data) => {
     const response = await api.post("/sales/", data);
+    return response.data;
+};
+
+export const getSales = async (params = {}) => {
+    const response = await api.get("/sales/", {
+        params,
+    });
+
     return response.data;
 };

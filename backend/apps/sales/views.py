@@ -12,15 +12,39 @@ from .services import create_sale
 
 
 class SaleViewSet(viewsets.ModelViewSet):
-    queryset = Sale.objects.select_related(
-        "branch",
-        "sold_by",
-    ).prefetch_related(
-        "items",
-    )
-
     serializer_class = SaleSerializer
     permission_classes = [IsAuthenticated]
+
+
+    def get_queryset(self):
+        queryset = Sale.objects.select_related(
+            "branch",
+            "sold_by",
+        ).prefetch_related("items__batch__medicine")
+
+        user = self.request.user
+
+        if user.role != "ADMIN":
+            queryset = queryset.filter(
+                branch=user.branch
+            )
+
+        date_from = self.request.query_params.get("date_from")
+        date_to = self.request.query_params.get("date_to")
+
+        if date_from:
+            queryset = queryset.filter(
+                sale_date__gte=date_from
+            )
+
+        if date_to:
+            queryset = queryset.filter(
+                sale_date__lte=date_to
+        )
+
+        return queryset
+
+
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

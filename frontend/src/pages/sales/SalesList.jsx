@@ -11,35 +11,84 @@ const SalesList = () => {
 
     const [sales, setSales] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searching, setSearching] = useState(false);
     const [error, setError] = useState("");
 
+    const [dateFrom, setDateFrom] = useState("");
+    const [dateTo, setDateTo] = useState("");
+
+    const loadSales = async (filters = {}) => {
+        try {
+            setError("");
+
+            const data = await getSales(filters);
+
+            setSales(
+                Array.isArray(data)
+                    ? data
+                    : data.results || []
+            );
+        } catch (err) {
+            console.error("Sales Error:", err);
+
+            setError(
+                err.response?.data?.detail ||
+                "Failed to load sales."
+            );
+        }
+    };
+
     useEffect(() => {
-        const loadSales = async () => {
+        const initialLoad = async () => {
             try {
                 setLoading(true);
-                setError("");
-
-                const data = await getSales();
-
-                setSales(
-                    Array.isArray(data)
-                        ? data
-                        : data.results || []
-                );
-            } catch (err) {
-                console.error("Sales Error:", err);
-
-                setError(
-                    err.response?.data?.detail ||
-                    "Failed to load sales."
-                );
+                await loadSales();
             } finally {
                 setLoading(false);
             }
         };
 
-        loadSales();
+        initialLoad();
     }, []);
+
+    const handleSearch = async () => {
+        if (dateFrom && dateTo && dateFrom > dateTo) {
+            setError(
+                "From Date cannot be greater than To Date."
+            );
+            return;
+        }
+
+        try {
+            setSearching(true);
+            setError("");
+
+            await loadSales({
+                ...(dateFrom && {
+                    date_from: dateFrom,
+                }),
+                ...(dateTo && {
+                    date_to: dateTo,
+                }),
+            });
+        } finally {
+            setSearching(false);
+        }
+    };
+
+    const handleClear = async () => {
+        setDateFrom("");
+        setDateTo("");
+
+        try {
+            setSearching(true);
+            setError("");
+
+            await loadSales();
+        } finally {
+            setSearching(false);
+        }
+    };
 
     const getBranchName = (sale) => {
         return (
@@ -114,6 +163,65 @@ const SalesList = () => {
                     </div>
                 </div>
 
+                {/* Date Search */}
+                <div className="sales-filter">
+                    <div className="sales-filter-field">
+                        <label htmlFor="dateFrom">
+                            From Date
+                        </label>
+
+                        <input
+                            id="dateFrom"
+                            type="date"
+                            value={dateFrom}
+                            onChange={(e) =>
+                                setDateFrom(
+                                    e.target.value
+                                )
+                            }
+                        />
+                    </div>
+
+                    <div className="sales-filter-field">
+                        <label htmlFor="dateTo">
+                            To Date
+                        </label>
+
+                        <input
+                            id="dateTo"
+                            type="date"
+                            value={dateTo}
+                            onChange={(e) =>
+                                setDateTo(
+                                    e.target.value
+                                )
+                            }
+                        />
+                    </div>
+
+                    <div className="sales-filter-actions">
+                        <button
+                            type="button"
+                            className="primary-button"
+                            onClick={handleSearch}
+                            disabled={searching}
+                        >
+                            {searching
+                                ? "Searching..."
+                                : "Search"}
+                        </button>
+
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={handleClear}
+                            disabled={searching}
+                        >
+                            Clear
+                        </button>
+                    </div>
+                </div>
+
                 {sales.length === 0 ? (
                     <div className="empty-state">
                         No sales found.
@@ -123,55 +231,22 @@ const SalesList = () => {
                         <table className="data-table">
                             <thead>
                                 <tr>
-                                    <th>
-                                        Invoice
-                                    </th>
-
-                                    <th>
-                                        Branch
-                                    </th>
-
-                                    <th>
-                                        Sold By
-                                    </th>
-
-                                    <th>
-                                        Date
-                                    </th>
-
-                                    <th>
-                                        Items
-                                    </th>
-
-                                    <th>
-                                        Total
-                                    </th>
-
-                                    <th>
-                                        Discount
-                                    </th>
-
-                                    <th>
-                                        Paid
-                                    </th>
-
-                                    <th>
-                                        Due
-                                    </th>
-
-                                    <th>
-                                        Action
-                                    </th>
+                                    <th>Invoice</th>
+                                    <th>Branch</th>
+                                    <th>Sold By</th>
+                                    <th>Date</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Discount</th>
+                                    <th>Paid</th>
+                                    <th>Due</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
 
                             <tbody>
                                 {sales.map((sale) => (
-                                    <tr
-                                        key={
-                                            sale.id
-                                        }
-                                    >
+                                    <tr key={sale.id}>
                                         <td>
                                             <strong>
                                                 {
@@ -181,34 +256,26 @@ const SalesList = () => {
                                         </td>
 
                                         <td>
-                                            {
-                                                getBranchName(
-                                                    sale
-                                                )
-                                            }
+                                            {getBranchName(
+                                                sale
+                                            )}
                                         </td>
 
                                         <td>
-                                            {
-                                                getSoldBy(
-                                                    sale
-                                                )
-                                            }
+                                            {getSoldBy(
+                                                sale
+                                            )}
                                         </td>
 
                                         <td>
-                                            {
-                                                sale.sale_date ||
-                                                "-"
-                                            }
+                                            {sale.sale_date ||
+                                                "-"}
                                         </td>
 
                                         <td>
-                                            {
-                                                getItemCount(
-                                                    sale
-                                                )
-                                            }
+                                            {getItemCount(
+                                                sale
+                                            )}
                                         </td>
 
                                         <td>
@@ -216,9 +283,7 @@ const SalesList = () => {
                                             {Number(
                                                 sale.total_amount ||
                                                     0
-                                            ).toFixed(
-                                                2
-                                            )}
+                                            ).toFixed(2)}
                                         </td>
 
                                         <td>
@@ -226,9 +291,7 @@ const SalesList = () => {
                                             {Number(
                                                 sale.discount ||
                                                     0
-                                            ).toFixed(
-                                                2
-                                            )}
+                                            ).toFixed(2)}
                                         </td>
 
                                         <td>
@@ -236,9 +299,7 @@ const SalesList = () => {
                                             {Number(
                                                 sale.paid_amount ||
                                                     0
-                                            ).toFixed(
-                                                2
-                                            )}
+                                            ).toFixed(2)}
                                         </td>
 
                                         <td>
@@ -256,9 +317,7 @@ const SalesList = () => {
                                                 {Number(
                                                     sale.due_amount ||
                                                         0
-                                                ).toFixed(
-                                                    2
-                                                )}
+                                                ).toFixed(2)}
                                             </span>
                                         </td>
 
