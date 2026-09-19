@@ -198,7 +198,7 @@ const POS = () => {
             return;
         }
 
-        if (!user?.branch_id) {
+        if (!user?.branch_id && user.role != "ADMIN") {
             setError(
                 "Your account is not assigned to a branch."
             );
@@ -221,7 +221,8 @@ const POS = () => {
             setSubmitting(true);
 
             const payload = {
-                branch: user.branch_id,
+                invoice_number: `POS-${Date.now()}`,
+                branch: user.branch_id || 1, // Default to 1 if user has no branch
                 sale_date: new Date()
                     .toISOString()
                     .split("T")[0],

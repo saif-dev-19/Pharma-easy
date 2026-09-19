@@ -136,7 +136,7 @@ function Login() {
                     </form>
 
                     <div className="login-footer">
-                        Pharma Easy &copy; 2024. All rights reserved.
+                        Pharma Easy &copy; 2026. All rights reserved.
                     </div>
 
                 </div>

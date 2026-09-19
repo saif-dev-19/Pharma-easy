@@ -1,6 +1,6 @@
 from rest_framework import status, viewsets
 from rest_framework.response import Response
-
+from rest_framework.permissions import IsAuthenticated
 from apps.authentication.permissions import IsAdminManagerOrStaff, IsAdminOrManager
 
 from .models import Sale
@@ -20,23 +20,27 @@ class SaleViewSet(viewsets.ModelViewSet):
     )
 
     serializer_class = SaleSerializer
-    permission_classes = [IsAdminManagerOrStaff]
+    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         validated_data = serializer.validated_data
+        print("validated_data---input data:   ", validated_data)
 
         items_data = request.data.get("items", [])
-
+        print("items_data---input item:   ", items_data)
         items_serializer = SaleItemInputSerializer(
             data=items_data,
             many=True,
         )
+        print("items_serializer---input item serializer:   ", items_serializer)
         items_serializer.is_valid(raise_exception=True)
 
         items_data = items_serializer.validated_data
+
+       
 
         sale = create_sale(
             sale_data=validated_data,

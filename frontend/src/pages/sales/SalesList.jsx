@@ -6,6 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 
 const SalesList = () => {
     const navigate = useNavigate();
+    // eslint-disable-next-line no-unused-vars
     const { user } = useAuth();
 
     const [sales, setSales] = useState([]);

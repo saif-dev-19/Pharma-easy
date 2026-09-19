@@ -20,6 +20,7 @@ def create_stock_transfer(*, transfer_data, items_data, user):
     )
 
     today = timezone.now().date()
+    print("items_data", items_data)
 
     for item_data in items_data:
         batch = item_data["batch"]

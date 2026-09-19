@@ -66,7 +66,7 @@ class SaleSerializer(serializers.ModelSerializer):
         branch = attrs.get("branch")
 
         if user.role in ["MANAGER", "STAFF"]:
-            if user.branch_id != branch.id:
+            if user.branch_id != branch.id or user.role == "ADMIN":
                 raise serializers.ValidationError(
                     "You can only create sales for your own branch."
                 )

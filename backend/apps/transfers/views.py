@@ -51,6 +51,7 @@ class StockTransferViewSet(viewsets.ModelViewSet):
 
         # Remove nested items from StockTransfer data
         items_data = validated_data.pop("items", [])
+        print("items_data", items_data)
 
         if not items_data:
             return Response(

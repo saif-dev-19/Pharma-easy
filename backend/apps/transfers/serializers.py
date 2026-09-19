@@ -9,10 +9,10 @@ class StockTransferItemSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
-    batch = serializers.CharField(
-        source="batch.batch_number",
-        read_only=True
-    )
+    # batch = serializers.CharField(
+    #     source="batch.batch_number",
+    #     read_only=True
+    # )
     class Meta:
         model = StockTransferItem
         fields = [
