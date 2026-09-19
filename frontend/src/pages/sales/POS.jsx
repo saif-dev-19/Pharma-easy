@@ -255,6 +255,8 @@ const POS = () => {
             setDiscount("");
             setPaidAmount("");
         } catch (err) {
+            console.log("SALE ERROR:", err.response?.data);
+            console.log("SALE STATUS:", err.response?.status);
             console.error("Sale error:", err);
 
             const responseData = err.response?.data;

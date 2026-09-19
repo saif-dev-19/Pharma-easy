@@ -27,20 +27,8 @@ class SaleViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         validated_data = serializer.validated_data
-        print("validated_data---input data:   ", validated_data)
 
-        items_data = request.data.get("items", [])
-        print("items_data---input item:   ", items_data)
-        items_serializer = SaleItemInputSerializer(
-            data=items_data,
-            many=True,
-        )
-        print("items_serializer---input item serializer:   ", items_serializer)
-        items_serializer.is_valid(raise_exception=True)
-
-        items_data = items_serializer.validated_data
-
-       
+        items_data = validated_data.pop("items")
 
         sale = create_sale(
             sale_data=validated_data,
@@ -53,25 +41,4 @@ class SaleViewSet(viewsets.ModelViewSet):
         return Response(
             response_serializer.data,
             status=status.HTTP_201_CREATED,
-        )
-
-    def get_queryset(self):
-        user = self.request.user
-
-        queryset = (
-            Sale.objects
-            .select_related(
-                "branch",
-                "sold_by",
-            )
-            .prefetch_related(
-                "items",
-            )
-        )
-
-        if user.role == "ADMIN":
-            return queryset
-
-        return queryset.filter(
-            branch=user.branch
         )

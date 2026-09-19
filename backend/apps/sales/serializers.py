@@ -2,10 +2,19 @@ from rest_framework import serializers
 
 from .models import Sale, SaleItem
 
-
 class SaleItemSerializer(serializers.ModelSerializer):
-    medicine = serializers.PrimaryKeyRelatedField(
-        source="batch.medicine",
+    batch_number = serializers.CharField(
+        source="batch.batch_number",
+        read_only=True
+    )
+
+    medicine_name = serializers.CharField(
+        source="batch.medicine.name",
+        read_only=True
+    )
+
+    medicine_strength = serializers.CharField(
+        source="batch.medicine.strength",
         read_only=True
     )
 
@@ -13,28 +22,47 @@ class SaleItemSerializer(serializers.ModelSerializer):
         model = SaleItem
         fields = [
             "id",
-            "medicine",
             "batch",
+            "batch_number",
+            "medicine_name",
+            "medicine_strength",
             "quantity",
             "selling_price",
             "subtotal",
         ]
         read_only_fields = [
             "id",
-            "batch",
-            "selling_price",
-            "subtotal",
+            "batch_number",
+            "medicine_name",
+            "medicine_strength",
         ]
 
-
 class SaleItemInputSerializer(serializers.Serializer):
-    medicine = serializers.IntegerField()
+    batch = serializers.IntegerField()
     quantity = serializers.IntegerField(min_value=1)
+    selling_price = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+    subtotal = serializers.DecimalField(
+        max_digits=12,
+        decimal_places=2
+    )
 
 
 
 class SaleSerializer(serializers.ModelSerializer):
-    items = SaleItemSerializer(many=True, read_only=True)
+    items = SaleItemSerializer(many=True)
+
+    branch_name = serializers.CharField(
+        source="branch.name",
+        read_only=True
+    )
+
+    sold_by_name = serializers.CharField(
+        source="sold_by.username",
+        read_only=True
+    )
 
     class Meta:
         model = Sale
@@ -42,7 +70,9 @@ class SaleSerializer(serializers.ModelSerializer):
             "id",
             "invoice_number",
             "branch",
+            "branch_name",
             "sold_by",
+            "sold_by_name",
             "sale_date",
             "total_amount",
             "discount",
@@ -54,10 +84,10 @@ class SaleSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "sold_by",
+            "sold_by_name",
             "total_amount",
             "due_amount",
             "created_at",
-            "items",
         ]
 
     def validate(self, attrs):

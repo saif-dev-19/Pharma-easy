@@ -7,6 +7,12 @@ class Medicine(models.Model):
     strength = models.CharField(max_length=100, blank=True)
     dosage_form = models.CharField(max_length=100, blank=True)
     manufacturer = models.CharField(max_length=200, blank=True)
+    image = models.ImageField(
+        upload_to="medicines/",
+        blank=True,
+        null=True,
+    )
+
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
