@@ -15,26 +15,46 @@ class StockTransfer(models.Model):
     from_branch = models.ForeignKey(
         Branch,
         on_delete=models.PROTECT,
-        related_name="outgoing_transfers"
+        related_name="outgoing_transfers",
     )
+
     to_branch = models.ForeignKey(
         Branch,
         on_delete=models.PROTECT,
-        related_name="incoming_transfers"
+        related_name="incoming_transfers",
     )
+
     transfer_date = models.DateField()
+
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
-        default=Status.PENDING
+        default=Status.PENDING,
     )
+
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
-        related_name="stock_transfers_created"
+        related_name="stock_transfers_created",
     )
-    created_at = models.DateTimeField(auto_now_add=True)
+
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="stock_transfers_approved",
+    )
+
+    approved_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
 
     class Meta:
         ordering = ["-transfer_date", "-id"]

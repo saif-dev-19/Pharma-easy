@@ -49,8 +49,14 @@ class StockTransferSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
+    approved_by_name = serializers.CharField(
+        source="approved_by.username",
+        read_only=True,
+    )
+
     class Meta:
         model = StockTransfer
+
         fields = [
             "id",
             "from_branch",
@@ -61,17 +67,24 @@ class StockTransferSerializer(serializers.ModelSerializer):
             "status",
             "created_by",
             "created_by_name",
+            "approved_by",
+            "approved_by_name",
+            "approved_at",
             "created_at",
             "items",
         ]
 
         read_only_fields = [
             "id",
-            "from_branch_name",
-            "to_branch_name",
+            "status",
+            "created_by",
             "created_by_name",
+            "approved_by",
+            "approved_by_name",
+            "approved_at",
             "created_at",
         ]
+
 
     def validate(self, attrs):
         from_branch = attrs.get("from_branch")
