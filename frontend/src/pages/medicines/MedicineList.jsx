@@ -1,11 +1,15 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+
 import {
     getMedicines,
     deleteMedicine,
 } from "../../api/medicineApi";
+
 import { useAuth } from "../../context/AuthContext";
+
+import "./MedicineList.css";
 
 const MedicineList = () => {
     const { user } = useAuth();
@@ -13,6 +17,7 @@ const MedicineList = () => {
     const [medicines, setMedicines] = useState([]);
     const [search, setSearch] = useState("");
     const [activeFilter, setActiveFilter] = useState("");
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -49,7 +54,7 @@ const MedicineList = () => {
 
     useEffect(() => {
         fetchMedicines();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeFilter]);
 
     const handleSearch = (e) => {
@@ -82,30 +87,42 @@ const MedicineList = () => {
     return (
         <div className="medicine-page">
 
-            {/* Header */}
-            <div className="page-header">
-                <div>
-                    <h2>Medicines</h2>
-                    <p>Manage your pharmacy medicines</p>
+            {/* Page Header */}
+            <div className="medicine-header">
+                <div className="medicine-header-content">
+                    <span className="medicine-eyebrow">
+                        PHARMACY CATALOG
+                    </span>
+
+                    <h1>Medicines</h1>
+
+                    <p>
+                        Manage and organize your pharmacy medicine catalog.
+                    </p>
                 </div>
 
                 {user?.role === "ADMIN" && (
                     <Link
                         to="/medicines/new"
-                        className="primary-button"
+                        className="medicine-add-button"
                     >
-                        + Add Medicine
+                        <span>+</span>
+                        Add Medicine
                     </Link>
                 )}
             </div>
 
-            {/* Filters */}
-            <div className="filter-card">
+            {/* Search / Filters */}
+            <div className="medicine-toolbar">
                 <form
-                    className="medicine-filters"
+                    className="medicine-search-form"
                     onSubmit={handleSearch}
                 >
-                    <div className="search-wrapper">
+                    <div className="medicine-search-box">
+                        <span className="medicine-search-icon">
+                            ⌕
+                        </span>
+
                         <input
                             type="text"
                             placeholder="Search medicine, generic name or manufacturer..."
@@ -115,9 +132,15 @@ const MedicineList = () => {
                             }
                         />
 
-                        <button type="submit">
-                            Search
-                        </button>
+                        {search && (
+                            <button
+                                type="button"
+                                className="medicine-search-clear"
+                                onClick={() => setSearch("")}
+                            >
+                                ×
+                            </button>
+                        )}
                     </div>
 
                     <select
@@ -125,176 +148,224 @@ const MedicineList = () => {
                         onChange={(e) =>
                             setActiveFilter(e.target.value)
                         }
+                        className="medicine-status-filter"
                     >
-                        <option value="">All Medicines</option>
-                        <option value="true">Active</option>
-                        <option value="false">Inactive</option>
+                        <option value="">
+                            All Medicines
+                        </option>
+
+                        <option value="true">
+                            Active
+                        </option>
+
+                        <option value="false">
+                            Inactive
+                        </option>
                     </select>
+
+                    <button
+                        type="submit"
+                        className="medicine-search-button"
+                    >
+                        Search
+                    </button>
                 </form>
             </div>
 
             {/* Error */}
             {error && (
-                <div className="page-error">
+                <div className="medicine-error">
+                    <span>!</span>
                     {error}
                 </div>
             )}
 
-            {/* Table */}
-            <div className="data-card">
+            {/* Catalog Header */}
+            <div className="medicine-catalog-header">
+                <div>
+                    <h2>Medicine Catalog</h2>
 
-                <div className="data-card-header">
-                    <div>
-                        <h3>Medicine List</h3>
-                        <span>
-                            {medicines.length} medicine
-                            {medicines.length !== 1 ? "s" : ""}
-                        </span>
-                    </div>
+                    <p>
+                        Browse all available medicines
+                    </p>
                 </div>
 
-                {loading ? (
-                    <div className="page-loading">
-                        Loading medicines...
-                    </div>
-                ) : (
-                    <div className="table-container">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Image</th>
-                                    <th>Name</th>
-                                    <th>Generic Name</th>
-                                    <th>Strength</th>
-                                    <th>Dosage Form</th>
-                                    <th>Manufacturer</th>
-                                    <th>Status</th>
-                                    <th>Details</th>
-
-                                    {user?.role === "ADMIN" && (
-                                        
-                                        <th>Actions</th>
-                                    )}
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {medicines.length > 0 ? (
-                                    medicines.map((medicine) => (
-                                        <tr key={medicine.id}>
-                                            <td>
-                                                {medicine.image ? (
-                                                    <img
-                                                        src={medicine.image}
-                                                        alt={medicine.name}
-                                                        style={{
-                                                            width: "50px",
-                                                            height: "50px",
-                                                            objectFit: "cover",
-                                                            borderRadius: "8px",
-                                                        }}
-                                                    />
-                                                ) : (
-                                                    "-"
-                                                )}
-                                            </td>
-                                            <td>
-                                                <strong>
-                                                    {medicine.name}
-                                                </strong>
-                                            </td>
-
-                                            <td>
-                                                {medicine.generic_name ||
-                                                    "-"}
-                                            </td>
-
-                                            <td>
-                                                {medicine.strength ||
-                                                    "-"}
-                                            </td>
-
-                                            <td>
-                                                {medicine.dosage_form ||
-                                                    "-"}
-                                            </td>
-
-                                            <td>
-                                                {medicine.manufacturer ||
-                                                    "-"}
-                                            </td>
-
-                                            <td>
-                                                <span
-                                                    className={
-                                                        medicine.is_active
-                                                            ? "status-active"
-                                                            : "status-inactive"
-                                                    }
-                                                >
-                                                    {medicine.is_active
-                                                        ? "Active"
-                                                        : "Inactive"}
-                                                </span>
-                                            </td>
-
-                                            <td>
-                                                <Link
-                                                    to={`/medicines/${medicine.id}`}
-                                                    className="secondary-button"
-                                                >
-                                                    Details
-                                                </Link>
-                                            </td>
-
-                                            {user?.role === "ADMIN" && (
-                                                <td>
-                                                    <div className="action-buttons">
-
-                                                        <Link
-                                                            to={`/medicines/${medicine.id}/edit`}
-                                                            className="edit-button"
-                                                        >
-                                                            Edit
-                                                        </Link>
-
-                                                        <button
-                                                            onClick={() =>
-                                                                handleDelete(
-                                                                    medicine.id
-                                                                )
-                                                            }
-                                                            className="delete-button"
-                                                        >
-                                                            Delete
-                                                        </button>
-
-                                                    </div>
-                                                </td>
-                                            )}
-
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td
-                                            colSpan={
-                                                user?.role === "ADMIN"
-                                                    ? 9
-                                                    : 8
-                                            }
-                                            className="empty-state"
-                                        >
-                                            No medicines found.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-
+                <div className="medicine-count">
+                    <strong>{medicines.length}</strong>
+                    <span>
+                        {medicines.length === 1
+                            ? " medicine"
+                            : " medicines"}
+                    </span>
+                </div>
             </div>
+
+            {/* Loading */}
+            {loading ? (
+                <div className="medicine-loading">
+                    <div className="medicine-loading-spinner"></div>
+
+                    <p>Loading medicines...</p>
+                </div>
+            ) : medicines.length > 0 ? (
+
+                /* Medicine Grid */
+                <div className="medicine-grid">
+
+                    {medicines.map((medicine) => (
+                        <div
+                            className="medicine-card"
+                            key={medicine.id}
+                        >
+
+                            {/* Image */}
+                            <div className="medicine-card-image">
+
+                                {medicine.image ? (
+                                    <img
+                                        src={medicine.image}
+                                        alt={medicine.name}
+                                    />
+                                ) : (
+                                    <div className="medicine-image-placeholder">
+                                        <span>+</span>
+                                    </div>
+                                )}
+
+                                <span
+                                    className={
+                                        medicine.is_active
+                                            ? "medicine-status active"
+                                            : "medicine-status inactive"
+                                    }
+                                >
+                                    <span className="status-dot"></span>
+
+                                    {medicine.is_active
+                                        ? "Active"
+                                        : "Inactive"}
+                                </span>
+                            </div>
+
+                            {/* Card Content */}
+                            <div className="medicine-card-content">
+
+                                <div className="medicine-card-title">
+                                    <h3>
+                                        {medicine.name}
+                                    </h3>
+
+                                    <span>
+                                        {medicine.strength || "—"}
+                                    </span>
+                                </div>
+
+                                <p className="medicine-generic">
+                                    {medicine.generic_name ||
+                                        "Generic name not available"}
+                                </p>
+
+                                <div className="medicine-info-list">
+
+                                    <div className="medicine-info-item">
+                                        <span>
+                                            Dosage Form
+                                        </span>
+
+                                        <strong>
+                                            {medicine.dosage_form ||
+                                                "—"}
+                                        </strong>
+                                    </div>
+
+                                    <div className="medicine-info-item">
+                                        <span>
+                                            Manufacturer
+                                        </span>
+
+                                        <strong
+                                            title={
+                                                medicine.manufacturer ||
+                                                "—"
+                                            }
+                                        >
+                                            {medicine.manufacturer ||
+                                                "—"}
+                                        </strong>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            {/* Card Actions */}
+                            <div className="medicine-card-actions">
+
+                                <Link
+                                    to={`/medicines/${medicine.id}`}
+                                    className="medicine-details-button"
+                                >
+                                    View Details
+                                </Link>
+
+                                {user?.role === "ADMIN" && (
+                                    <>
+                                        <Link
+                                            to={`/medicines/${medicine.id}/edit`}
+                                            className="medicine-edit-button"
+                                        >
+                                            Edit
+                                        </Link>
+
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                handleDelete(
+                                                    medicine.id
+                                                )
+                                            }
+                                            className="medicine-delete-button"
+                                        >
+                                            Delete
+                                        </button>
+                                    </>
+                                )}
+
+                            </div>
+
+                        </div>
+                    ))}
+
+                </div>
+
+            ) : (
+
+                /* Empty State */
+                <div className="medicine-empty">
+
+                    <div className="medicine-empty-icon">
+                        +
+                    </div>
+
+                    <h3>No medicines found</h3>
+
+                    <p>
+                        Try changing your search or filter,
+                        or add a new medicine.
+                    </p>
+
+                    {user?.role === "ADMIN" && (
+                        <Link
+                            to="/medicines/new"
+                            className="medicine-empty-button"
+                        >
+                            Add Medicine
+                        </Link>
+                    )}
+
+                </div>
+            )}
+
         </div>
     );
 };

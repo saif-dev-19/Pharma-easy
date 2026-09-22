@@ -2,7 +2,7 @@ from django.db import models
 from django.db.models import Sum
 from django.utils import timezone
 
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -16,7 +16,7 @@ from .serializers import DashboardSaleSerializer
 
 
 class DashboardView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request):
         user = request.user
@@ -46,6 +46,10 @@ class DashboardView(APIView):
             sale_date=today
         )
 
+        total_sales_amount = sales.aggregate(
+            total=Sum("total_amount")
+        )["total"] or 0
+
         today_sales_count = today_sales.count()
 
         today_sales_amount = (
@@ -74,6 +78,7 @@ class DashboardView(APIView):
         )[:5]
 
         return Response({
+            "total_sales_amount": total_sales_amount,
             "total_branches": branches.count(),
 
             "total_medicines": Medicine.objects.filter(
