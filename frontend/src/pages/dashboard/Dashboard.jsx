@@ -1,9 +1,6 @@
-import { useEffect, useState } from "react";
-
+import { useEffect, useMemo, useState } from "react";
 import { getDashboard } from "../../api/dashboardApi";
-
 import "./Dashboard.css";
-
 
 const Dashboard = () => {
     const [dashboard, setDashboard] = useState(null);
@@ -14,15 +11,14 @@ const Dashboard = () => {
         const fetchDashboard = async () => {
             try {
                 const data = await getDashboard();
-
                 setDashboard(data);
             } catch (error) {
                 console.error("Dashboard Error:", error);
 
                 setError(
                     error.response?.data?.detail ||
-                    error.response?.data?.message ||
-                    "Failed to load dashboard data."
+                        error.response?.data?.message ||
+                        "Failed to load dashboard data."
                 );
             } finally {
                 setLoading(false);
@@ -32,34 +28,42 @@ const Dashboard = () => {
         fetchDashboard();
     }, []);
 
-
     const formatCurrency = (amount) => {
         return `৳ ${Number(amount || 0).toLocaleString("en-BD")}`;
     };
 
+    const formatShortCurrency = (amount) => {
+        const value = Number(amount || 0);
 
-    if (loading) {
-        return (
-            <div className="dashboard-state">
-                <div className="dashboard-loader"></div>
-                <p>Loading dashboard...</p>
-            </div>
-        );
-    }
+        if (value >= 10000000) {
+            return `৳ ${(value / 10000000).toFixed(1)}Cr`;
+        }
 
+        if (value >= 100000) {
+            return `৳ ${(value / 100000).toFixed(1)}L`;
+        }
 
-    if (error) {
-        return (
-            <div className="dashboard-state dashboard-state-error">
-                <div className="state-icon">!</div>
+        if (value >= 1000) {
+            return `৳ ${(value / 1000).toFixed(1)}K`;
+        }
 
-                <h3>Unable to load dashboard</h3>
+        return `৳ ${value}`;
+    };
 
-                <p>{error}</p>
-            </div>
-        );
-    }
+    const formatDate = (date) => {
+        if (!date) return "-";
 
+        const parsedDate = new Date(date);
+
+        if (Number.isNaN(parsedDate.getTime())) {
+            return date;
+        }
+
+        return parsedDate.toLocaleDateString("en-BD", {
+            day: "numeric",
+            month: "short",
+        });
+    };
 
     const recentSales = dashboard?.recent_sales || [];
 
@@ -77,6 +81,81 @@ const Dashboard = () => {
         ? todaySales / todayTransactions
         : 0;
 
+    /*
+     * =========================================================
+     * REAL SALES CHART DATA
+     * =========================================================
+     *
+     * Uses actual recent_sales returned by the backend.
+     *
+     * No fake Mon/Tue/Wed values.
+     */
+    const chartSales = useMemo(() => {
+        return [...recentSales]
+            .filter((sale) => Number(sale.total_amount || 0) >= 0)
+            .slice(0, 7)
+            .reverse();
+    }, [recentSales]);
+
+    const chartMax = useMemo(() => {
+        const values = chartSales.map((sale) =>
+            Number(sale.total_amount || 0)
+        );
+
+        return Math.max(...values, 0);
+    }, [chartSales]);
+
+    const chartAverage = useMemo(() => {
+        if (!chartSales.length) return 0;
+
+        const total = chartSales.reduce(
+            (sum, sale) =>
+                sum + Number(sale.total_amount || 0),
+            0
+        );
+
+        return total / chartSales.length;
+    }, [chartSales]);
+
+    const chartTotal = useMemo(() => {
+        return chartSales.reduce(
+            (sum, sale) =>
+                sum + Number(sale.total_amount || 0),
+            0
+        );
+    }, [chartSales]);
+
+    const highestSale = useMemo(() => {
+        if (!chartSales.length) return null;
+
+        return chartSales.reduce((highest, sale) => {
+            return Number(sale.total_amount || 0) >
+                Number(highest.total_amount || 0)
+                ? sale
+                : highest;
+        }, chartSales[0]);
+    }, [chartSales]);
+
+    if (loading) {
+        return (
+            <div className="dashboard-state">
+                <div className="dashboard-loader"></div>
+                <p>Loading dashboard...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="dashboard-state dashboard-state-error">
+                <div className="state-icon">!</div>
+
+                <h3>Unable to load dashboard</h3>
+
+                <p>{error}</p>
+            </div>
+        );
+    }
 
     return (
         <div className="dashboard">
@@ -100,8 +179,8 @@ const Dashboard = () => {
                     </p>
                 </div>
 
-
                 <div className="dashboard-date">
+
                     <span className="date-dot"></span>
 
                     <div>
@@ -118,6 +197,7 @@ const Dashboard = () => {
                             )}
                         </strong>
                     </div>
+
                 </div>
 
             </div>
@@ -140,6 +220,7 @@ const Dashboard = () => {
                         </div>
 
                         <div>
+
                             <span className="kpi-label">
                                 Branches
                             </span>
@@ -151,6 +232,7 @@ const Dashboard = () => {
                             <small>
                                 Active pharmacy branches
                             </small>
+
                         </div>
 
                     </div>
@@ -173,6 +255,7 @@ const Dashboard = () => {
                         </div>
 
                         <div>
+
                             <span className="kpi-label">
                                 Medicines
                             </span>
@@ -184,6 +267,7 @@ const Dashboard = () => {
                             <small>
                                 Active medicines
                             </small>
+
                         </div>
 
                     </div>
@@ -206,6 +290,7 @@ const Dashboard = () => {
                         </div>
 
                         <div>
+
                             <span className="kpi-label">
                                 Total Stock
                             </span>
@@ -219,6 +304,7 @@ const Dashboard = () => {
                             <small>
                                 Units currently available
                             </small>
+
                         </div>
 
                     </div>
@@ -241,6 +327,7 @@ const Dashboard = () => {
                         </div>
 
                         <div>
+
                             <span className="kpi-label">
                                 Today's Sales
                             </span>
@@ -252,6 +339,7 @@ const Dashboard = () => {
                             <small>
                                 {todayTransactions} transactions today
                             </small>
+
                         </div>
 
                     </div>
@@ -281,17 +369,20 @@ const Dashboard = () => {
                     <div className="card-header">
 
                         <div>
+
                             <span className="card-overline">
                                 REVENUE
                             </span>
 
-                            <h2>Sales Performance</h2>
+                            <h2>
+                                Recent Sales Trend
+                            </h2>
 
                             <p>
-                                Overall sales performance of your pharmacy
+                                Actual sales from recent transactions
                             </p>
-                        </div>
 
+                        </div>
 
                         <div className="card-header-icon sales-header-icon">
                             ৳
@@ -299,6 +390,8 @@ const Dashboard = () => {
 
                     </div>
 
+
+                    {/* Sales Summary */}
 
                     <div className="sales-highlight">
 
@@ -314,10 +407,11 @@ const Dashboard = () => {
 
                         </div>
 
-
                         <div className="sales-today">
 
-                            <span>Today</span>
+                            <span>
+                                Today
+                            </span>
 
                             <strong>
                                 {formatCurrency(todaySales)}
@@ -328,76 +422,209 @@ const Dashboard = () => {
                     </div>
 
 
-                    {/* Fake visual sales graph using available
-                        dashboard data. No extra API required. */}
+                    {/* =================================================
+                        REAL SALES BAR CHART
+                    ================================================= */}
 
-                    <div className="sales-chart">
+                    <div className="sales-chart-container">
 
-                        <div className="chart-y-axis">
-                            <span>High</span>
-                            <span>Mid</span>
-                            <span>Low</span>
+                        <div className="chart-title-row">
+
+                            <div>
+                                <strong>
+                                    Recent Transactions
+                                </strong>
+
+                                <span>
+                                    {chartSales.length} transactions shown
+                                </span>
+                            </div>
+
+                            {highestSale && (
+                                <div className="chart-highest">
+
+                                    <span>
+                                        Highest
+                                    </span>
+
+                                    <strong>
+                                        {formatCurrency(
+                                            highestSale.total_amount
+                                        )}
+                                    </strong>
+
+                                </div>
+                            )}
+
                         </div>
 
 
-                        <div className="chart-area">
+                        {chartSales.length > 0 ? (
 
-                            <div className="chart-grid-line"></div>
-                            <div className="chart-grid-line"></div>
-                            <div className="chart-grid-line"></div>
+                            <div className="sales-chart">
+
+                                <div className="chart-y-axis">
+
+                                    <span>
+                                        {formatShortCurrency(chartMax)}
+                                    </span>
+
+                                    <span>
+                                        {formatShortCurrency(
+                                            chartMax / 2
+                                        )}
+                                    </span>
+
+                                    <span>
+                                        ৳ 0
+                                    </span>
+
+                                </div>
 
 
-                            <div className="chart-placeholder">
+                                <div className="chart-area">
 
-                                <div className="chart-line chart-line-one"></div>
+                                    <div className="chart-grid-line chart-grid-top"></div>
 
-                                <div className="chart-line chart-line-two"></div>
+                                    <div className="chart-grid-line chart-grid-middle"></div>
 
-                                <div className="chart-point point-one"></div>
-                                <div className="chart-point point-two"></div>
-                                <div className="chart-point point-three"></div>
-                                <div className="chart-point point-four"></div>
-                                <div className="chart-point point-five"></div>
+                                    <div className="chart-grid-line chart-grid-bottom"></div>
+
+
+                                    <div className="chart-bars">
+
+                                        {chartSales.map(
+                                            (sale, index) => {
+
+                                                const amount =
+                                                    Number(
+                                                        sale.total_amount || 0
+                                                    );
+
+                                                const height =
+                                                    chartMax > 0
+                                                        ? Math.max(
+                                                              (amount /
+                                                                  chartMax) *
+                                                                  100,
+                                                              6
+                                                          )
+                                                        : 6;
+
+                                                return (
+                                                    <div
+                                                        className="chart-bar-column"
+                                                        key={
+                                                            sale.id ||
+                                                            `${sale.invoice_number}-${index}`
+                                                        }
+                                                    >
+
+                                                        <div className="chart-bar-value">
+                                                            {formatShortCurrency(
+                                                                amount
+                                                            )}
+                                                        </div>
+
+                                                        <div className="chart-bar-track">
+
+                                                            <div
+                                                                className="chart-bar"
+                                                                style={{
+                                                                    height: `${height}%`,
+                                                                }}
+                                                            ></div>
+
+                                                        </div>
+
+                                                        <div className="chart-bar-label">
+
+                                                            <strong>
+                                                                {formatDate(
+                                                                    sale.sale_date
+                                                                )}
+                                                            </strong>
+
+                                                            <span>
+                                                                {sale.invoice_number ||
+                                                                    `Sale #${sale.id}`}
+                                                            </span>
+
+                                                        </div>
+
+                                                    </div>
+                                                );
+                                            }
+                                        )}
+
+                                    </div>
+
+                                </div>
 
                             </div>
 
+                        ) : (
 
-                            <div className="chart-days">
-                                <span>Mon</span>
-                                <span>Tue</span>
-                                <span>Wed</span>
-                                <span>Thu</span>
-                                <span>Fri</span>
-                                <span>Sat</span>
-                                <span>Sun</span>
+                            <div className="chart-empty">
+
+                                <div className="chart-empty-icon">
+                                    ৳
+                                </div>
+
+                                <strong>
+                                    No sales data available
+                                </strong>
+
+                                <span>
+                                    Sales transactions will appear
+                                    here once a sale is recorded.
+                                </span>
+
                             </div>
 
-                        </div>
-
-                    </div>
+                        )}
 
 
-                    <div className="sales-metrics">
+                        {/* Chart Summary */}
 
-                        <div>
-                            <span>
-                                Today's Transactions
-                            </span>
+                        <div className="chart-summary">
 
-                            <strong>
-                                {todayTransactions}
-                            </strong>
-                        </div>
+                            <div>
 
+                                <span>
+                                    Shown Sales
+                                </span>
 
-                        <div>
-                            <span>
-                                Average Sale
-                            </span>
+                                <strong>
+                                    {formatCurrency(chartTotal)}
+                                </strong>
 
-                            <strong>
-                                {formatCurrency(averageSale)}
-                            </strong>
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    Average Transaction
+                                </span>
+
+                                <strong>
+                                    {formatCurrency(chartAverage)}
+                                </strong>
+
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    Today's Transactions
+                                </span>
+
+                                <strong>
+                                    {todayTransactions}
+                                </strong>
+
+                            </div>
+
                         </div>
 
                     </div>
@@ -405,9 +632,8 @@ const Dashboard = () => {
                 </section>
 
 
-
                 {/* =================================================
-                    INVENTORY ALERTS
+                    INVENTORY HEALTH
                 ================================================= */}
 
                 <section className="dashboard-card inventory-card">
@@ -415,17 +641,20 @@ const Dashboard = () => {
                     <div className="card-header">
 
                         <div>
+
                             <span className="card-overline">
                                 INVENTORY
                             </span>
 
-                            <h2>Inventory Health</h2>
+                            <h2>
+                                Inventory Health
+                            </h2>
 
                             <p>
                                 Current stock condition
                             </p>
-                        </div>
 
+                        </div>
 
                         <div className="card-header-icon inventory-header-icon">
                             ✓
@@ -435,7 +664,6 @@ const Dashboard = () => {
 
 
                     <div className="inventory-status-list">
-
 
                         {/* Low Stock */}
 
@@ -448,6 +676,7 @@ const Dashboard = () => {
                                 </div>
 
                                 <div>
+
                                     <strong>
                                         Low Stock
                                     </strong>
@@ -455,17 +684,16 @@ const Dashboard = () => {
                                     <span>
                                         Items need restocking
                                     </span>
+
                                 </div>
 
                             </div>
-
 
                             <div className="status-count">
                                 {dashboard?.low_stock_count || 0}
                             </div>
 
                         </div>
-
 
 
                         {/* Expired */}
@@ -479,6 +707,7 @@ const Dashboard = () => {
                                 </div>
 
                                 <div>
+
                                     <strong>
                                         Expired Stock
                                     </strong>
@@ -486,17 +715,16 @@ const Dashboard = () => {
                                     <span>
                                         Expired items in inventory
                                     </span>
+
                                 </div>
 
                             </div>
-
 
                             <div className="status-count">
                                 {dashboard?.expired_stock_count || 0}
                             </div>
 
                         </div>
-
 
 
                         {/* Healthy */}
@@ -510,6 +738,7 @@ const Dashboard = () => {
                                 </div>
 
                                 <div>
+
                                     <strong>
                                         Stock Available
                                     </strong>
@@ -517,10 +746,10 @@ const Dashboard = () => {
                                     <span>
                                         Units currently available
                                     </span>
+
                                 </div>
 
                             </div>
-
 
                             <div className="status-count">
                                 {Number(
@@ -547,7 +776,6 @@ const Dashboard = () => {
 
                         </div>
 
-
                         <div>
 
                             <span>
@@ -567,7 +795,6 @@ const Dashboard = () => {
             </div>
 
 
-
             {/* =====================================================
                 RECENT SALES
             ===================================================== */}
@@ -582,14 +809,15 @@ const Dashboard = () => {
                             TRANSACTIONS
                         </span>
 
-                        <h2>Recent Sales</h2>
+                        <h2>
+                            Recent Sales
+                        </h2>
 
                         <p>
                             Latest transactions across your pharmacy
                         </p>
 
                     </div>
-
 
                     <div className="recent-count">
                         {recentSales.length} Recent
@@ -673,16 +901,22 @@ const Dashboard = () => {
 
                                             <span
                                                 className={
-                                                    Number(sale.due_amount) > 0
+                                                    Number(
+                                                        sale.due_amount
+                                                    ) > 0
                                                         ? "payment-status due"
                                                         : "payment-status paid"
                                                 }
                                             >
-                                                {Number(sale.due_amount) > 0
+
+                                                {Number(
+                                                    sale.due_amount
+                                                ) > 0
                                                     ? `Due ${formatCurrency(
-                                                        sale.due_amount
-                                                    )}`
+                                                          sale.due_amount
+                                                      )}`
                                                     : "Paid"}
+
                                             </span>
 
                                         </td>
@@ -709,7 +943,8 @@ const Dashboard = () => {
                                         </strong>
 
                                         <span>
-                                            Sales transactions will appear here.
+                                            Sales transactions will
+                                            appear here.
                                         </span>
 
                                     </td>
@@ -729,6 +964,5 @@ const Dashboard = () => {
         </div>
     );
 };
-
 
 export default Dashboard;
