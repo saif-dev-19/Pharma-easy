@@ -28,7 +28,7 @@ class Purchase(models.Model):
         on_delete=models.PROTECT,
         related_name="purchases"
     )
-    invoice_number = models.CharField(max_length=100)
+    invoice_number = models.CharField(max_length=100, unique=True)
     purchase_date = models.DateField()
     total_amount = models.DecimalField(
         max_digits=12,
@@ -44,20 +44,10 @@ class Purchase(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["supplier", "invoice_number"],
-                name="unique_supplier_invoice"
-            )
-        ]
         ordering = ["-purchase_date", "-id"]
 
     def __str__(self):
         return self.invoice_number
-
-
-from apps.medicines.models import Medicine
-
 
 class PurchaseItem(models.Model):
     purchase = models.ForeignKey(
@@ -65,8 +55,8 @@ class PurchaseItem(models.Model):
         on_delete=models.CASCADE,
         related_name="items"
     )
-    medicine = models.ForeignKey(
-        Medicine,
+    batch = models.ForeignKey(
+        Batch,
         on_delete=models.PROTECT,
         related_name="purchase_items"
     )
@@ -89,4 +79,4 @@ class PurchaseItem(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.medicine} - {self.quantity}"
+        return f"{self.batch} - {self.quantity}"

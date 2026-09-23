@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPurchase } from "../../api/purchaseApi";
+import { getMedicines } from "../../api/medicineApi";
 import { getBatches } from "../../api/batchApi";
 import { useAuth } from "../../context/AuthContext";
 import { getSuppliers } from "../../api/supplierApi";
@@ -11,8 +12,9 @@ const PurchaseForm = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
 
+    const [medicines, setMedicines] = useState([]);
     const [batches, setBatches] = useState([]);
-    const [loadingBatches, setLoadingBatches] = useState(true);
+    const [loadingMedicines, setLoadingMedicines] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
 
@@ -22,13 +24,17 @@ const PurchaseForm = () => {
     const [form, setForm] = useState({
         supplier: "",
         branch: user?.branch_id || "",
-        invoice_number: "",
         purchase_date: new Date().toISOString().split("T")[0],
     });
 
     const [items, setItems] = useState([
         {
+            mode: "new",
             batch: "",
+            medicine: "",
+            supplier_batch_number: "",
+            expiry_date: "",
+            pack_size: "",
             quantity: "",
             purchase_price: "",
             selling_price: "",
@@ -38,18 +44,27 @@ const PurchaseForm = () => {
     useEffect(() => {
         const loadData = async () => {
             try {
-                setLoadingBatches(true);
+                setLoadingMedicines(true);
                 setError("");
 
-                const [batchData, supplierData, branchData] =
+                const [medicineData, batchData, supplierData, branchData] =
                     await Promise.all([
+                        getMedicines({ is_active: true }),
                         getBatches(),
                         getSuppliers(),
                         getBranches(),
                     ]);
 
+                setMedicines(
+                    Array.isArray(medicineData)
+                        ? medicineData
+                        : medicineData.results || []
+                );
+
                 setBatches(
-                    Array.isArray(batchData) ? batchData : []
+                    Array.isArray(batchData)
+                        ? batchData
+                        : batchData.results || []
                 );
 
                 setSuppliers(
@@ -66,7 +81,7 @@ const PurchaseForm = () => {
                     "Failed to load purchase form data."
                 );
             } finally {
-                setLoadingBatches(false);
+                setLoadingMedicines(false);
             }
         };
 
@@ -101,7 +116,12 @@ const PurchaseForm = () => {
         setItems((prev) => [
             ...prev,
             {
+                mode: "new",
                 batch: "",
+                medicine: "",
+                supplier_batch_number: "",
+                expiry_date: "",
+                pack_size: "",
                 quantity: "",
                 purchase_price: "",
                 selling_price: "",
@@ -117,7 +137,14 @@ const PurchaseForm = () => {
 
     const calculateSubtotal = (item) => {
         const quantity = Number(item.quantity || 0);
-        const price = Number(item.purchase_price || 0);
+        const existingBatch = batches.find(
+            (batch) => String(batch.id) === String(item.batch)
+        );
+        const price = Number(
+            item.mode === "existing"
+                ? existingBatch?.purchase_price || 0
+                : item.purchase_price || 0
+        );
 
         return quantity * price;
     };
@@ -142,19 +169,23 @@ const PurchaseForm = () => {
             return;
         }
 
-        if (!form.invoice_number.trim()) {
-            setError("Invoice number is required.");
-            return;
-        }
+        const invalidItem = items.some((item) => {
+            if (!item.quantity || Number(item.quantity) <= 0) {
+                return true;
+            }
 
-        const invalidItem = items.some(
-            (item) =>
-                !item.batch ||
-                !item.quantity ||
-                Number(item.quantity) <= 0 ||
+            if (item.mode === "existing") {
+                return !item.batch;
+            }
+
+            return (
+                !item.medicine ||
+                !item.expiry_date ||
+                !item.pack_size ||
                 !item.purchase_price ||
                 !item.selling_price
-        );
+            );
+        });
 
         if (invalidItem) {
             setError("Please complete all purchase item fields.");
@@ -164,16 +195,24 @@ const PurchaseForm = () => {
         const payload = {
             supplier: Number(form.supplier),
             branch: Number(form.branch),
-            invoice_number: form.invoice_number.trim(),
             purchase_date: form.purchase_date,
-            total_amount: totalAmount.toFixed(2),
-            items: items.map((item) => ({
-                batch: Number(item.batch),
-                quantity: Number(item.quantity),
-                purchase_price: Number(item.purchase_price).toFixed(2),
-                selling_price: Number(item.selling_price).toFixed(2),
-                subtotal: calculateSubtotal(item).toFixed(2),
-            })),
+            items: items.map((item) => {
+                if (item.mode === "existing") {
+                    return {
+                        batch: Number(item.batch),
+                        quantity: Number(item.quantity),
+                    };
+                }
+
+                return {
+                    medicine: Number(item.medicine),
+                    expiry_date: item.expiry_date,
+                    pack_size: Number(item.pack_size),
+                    quantity: Number(item.quantity),
+                    purchase_price: Number(item.purchase_price).toFixed(2),
+                    selling_price: Number(item.selling_price).toFixed(2),
+                };
+            }),
         };
 
         try {
@@ -199,17 +238,17 @@ const PurchaseForm = () => {
         }
     };
 
-    if (loadingBatches) {
+    if (loadingMedicines) {
         return (
             <div className="page-loading">
-                Loading batches...
+                Loading medicines...
             </div>
         );
     }
 
     return (
-        <div className="page-container">
-            <div className="page-header">
+        <div className="page-container purchase-form-page">
+            <div className="page-header purchase-page-header">
                 <div>
                     <h1>Add Purchase</h1>
                     <p>Create a new pharmacy purchase</p>
@@ -224,7 +263,7 @@ const PurchaseForm = () => {
             </div>
 
             <form onSubmit={handleSubmit}>
-                <div className="form-card">
+                <div className="form-card purchase-info-card">
                     <div className="form-section">
                         <h2 className="form-section-title">
                             Purchase Information
@@ -278,21 +317,6 @@ const PurchaseForm = () => {
                             </div>
 
                             <div className="form-group">
-                                <label htmlFor="invoice_number">
-                                    Invoice Number
-                                </label>
-
-                                <input
-                                    id="invoice_number"
-                                    name="invoice_number"
-                                    type="text"
-                                    value={form.invoice_number}
-                                    onChange={handleChange}
-                                    placeholder="e.g. PUR-0006"
-                                />
-                            </div>
-
-                            <div className="form-group">
                                 <label htmlFor="purchase_date">
                                     Purchase Date
                                 </label>
@@ -309,7 +333,7 @@ const PurchaseForm = () => {
                     </div>
                 </div>
 
-                <div className="form-card">
+                <div className="form-card purchase-items-card">
                     <div className="data-card-header">
                         <div>
                             <h2>Purchase Items</h2>
@@ -325,150 +349,171 @@ const PurchaseForm = () => {
                         </button>
                     </div>
 
-                    <div className="table-container">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Batch</th>
-                                    <th>Quantity</th>
-                                    <th>Purchase Price</th>
-                                    <th>Selling Price</th>
-                                    <th>Subtotal</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
+                    <div className="purchase-item-list">
+                        {items.map((item, index) => {
+                            const selectedBatch = batches.find(
+                                (batch) => String(batch.id) === String(item.batch)
+                            );
 
-                            <tbody>
-                                {items.map((item, index) => (
-                                    <tr key={index}>
-                                        <td>
+                            return (
+                                <div className="purchase-item-card" key={index}>
+                                    <div className="purchase-item-heading">
+                                        <div>
+                                            <span className="purchase-item-number">
+                                                Item {String(index + 1).padStart(2, "0")}
+                                            </span>
+                                            <h3>
+                                                {item.mode === "existing"
+                                                    ? selectedBatch?.medicine_name || "Existing batch"
+                                                    : "New medicine batch"}
+                                            </h3>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className="purchase-remove-button"
+                                            onClick={() => removeItem(index)}
+                                            disabled={items.length === 1}
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+
+                                    <div className="purchase-item-fields">
+                                        <div className="purchase-field">
+                                            <label>Batch mode</label>
                                             <select
-                                                name="batch"
-                                                value={item.batch}
-                                                onChange={(e) =>
-                                                    handleItemChange(
-                                                        index,
-                                                        e
-                                                    )
-                                                }
+                                                value={item.mode}
+                                                onChange={(e) => handleItemChange(index, {
+                                                    target: { name: "mode", value: e.target.value },
+                                                })}
                                             >
-                                                <option value="">
-                                                    Select Batch
-                                                </option>
-
-                                                {batches.map((batch) => (
-                                                    <option
-                                                        key={batch.id}
-                                                        value={batch.id}
-                                                    >
-                                                        {batch.medicine_name ||
-                                                            batch.medicine?.name ||
-                                                            batch.medicine ||
-                                                            "Medicine"}{" "}
-                                                        -{" "}
-                                                        {batch.batch_number}
-                                                    </option>
-                                                ))}
+                                                <option value="new">New Batch</option>
+                                                <option value="existing">Existing Batch</option>
                                             </select>
-                                        </td>
+                                        </div>
 
-                                        <td>
+                                        <div className="purchase-field purchase-field-wide">
+                                            <label>{item.mode === "existing" ? "Selected medicine" : "Medicine"}</label>
+                                            {item.mode === "existing" ? (
+                                                <select
+                                                    name="batch"
+                                                    value={item.batch}
+                                                    onChange={(e) => handleItemChange(index, e)}
+                                                >
+                                                    <option value="">Select existing batch</option>
+                                                    {batches.map((batch) => (
+                                                        <option key={batch.id} value={batch.id}>
+                                                            {batch.medicine_name} - {batch.batch_number}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            ) : (
+                                                <select
+                                                    name="medicine"
+                                                    value={item.medicine}
+                                                    onChange={(e) => handleItemChange(index, e)}
+                                                >
+                                                    <option value="">Select medicine</option>
+                                                    {medicines.map((medicine) => (
+                                                        <option key={medicine.id} value={medicine.id}>
+                                                            {medicine.name}{medicine.strength ? ` - ${medicine.strength}` : ""}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            )}
+                                        </div>
+
+                                        {item.mode === "new" ? (
+                                            <>
+                                                <div className="purchase-field">
+                                                    <label htmlFor={`expiry-${index}`}>Expiry date</label>
+                                                    <input
+                                                        id={`expiry-${index}`}
+                                                        type="date"
+                                                        name="expiry_date"
+                                                        value={item.expiry_date}
+                                                        onChange={(e) => handleItemChange(index, e)}
+                                                    />
+                                                </div>
+                                                <div className="purchase-field">
+                                                    <label htmlFor={`pack-${index}`}>Pack size</label>
+                                                    <input
+                                                        id={`pack-${index}`}
+                                                        type="number"
+                                                        name="pack_size"
+                                                        min="1"
+                                                        value={item.pack_size}
+                                                        onChange={(e) => handleItemChange(index, e)}
+                                                        placeholder="e.g. 10"
+                                                    />
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="purchase-existing-summary">
+                                                <span>Expiry: {selectedBatch?.expiry_date || "-"}</span>
+                                                <span>Pack size: {selectedBatch?.pack_size || "-"}</span>
+                                                <span>Default prices are editable</span>
+                                            </div>
+                                        )}
+
+                                        <div className="purchase-field">
+                                            <label htmlFor={`quantity-${index}`}>Quantity</label>
                                             <input
+                                                id={`quantity-${index}`}
                                                 type="number"
                                                 name="quantity"
                                                 min="1"
                                                 value={item.quantity}
-                                                onChange={(e) =>
-                                                    handleItemChange(
-                                                        index,
-                                                        e
-                                                    )
-                                                }
+                                                onChange={(e) => handleItemChange(index, e)}
+                                                placeholder="0"
                                             />
-                                        </td>
+                                        </div>
 
-                                        <td>
+                                        <div className="purchase-field">
+                                            <label htmlFor={`purchase-price-${index}`}>Purchase price</label>
                                             <input
+                                                id={`purchase-price-${index}`}
                                                 type="number"
                                                 name="purchase_price"
                                                 min="0"
                                                 step="0.01"
-                                                value={
-                                                    item.purchase_price
-                                                }
-                                                onChange={(e) =>
-                                                    handleItemChange(
-                                                        index,
-                                                        e
-                                                    )
-                                                }
+                                                value={item.mode === "existing"
+                                                    ? item.purchase_price || selectedBatch?.purchase_price || ""
+                                                    : item.purchase_price}
+                                                onChange={(e) => handleItemChange(index, e)}
+                                                placeholder="0.00"
                                             />
-                                        </td>
+                                        </div>
 
-                                        <td>
+                                        <div className="purchase-field">
+                                            <label htmlFor={`selling-price-${index}`}>Selling price</label>
                                             <input
+                                                id={`selling-price-${index}`}
                                                 type="number"
                                                 name="selling_price"
                                                 min="0"
                                                 step="0.01"
-                                                value={
-                                                    item.selling_price
-                                                }
-                                                onChange={(e) =>
-                                                    handleItemChange(
-                                                        index,
-                                                        e
-                                                    )
-                                                }
+                                                value={item.mode === "existing"
+                                                    ? item.selling_price || selectedBatch?.selling_price || ""
+                                                    : item.selling_price}
+                                                onChange={(e) => handleItemChange(index, e)}
+                                                placeholder="0.00"
                                             />
-                                        </td>
+                                        </div>
+                                    </div>
 
-                                        <td>
-                                            <strong>
-                                                ৳{" "}
-                                                {calculateSubtotal(
-                                                    item
-                                                ).toFixed(2)}
-                                            </strong>
-                                        </td>
+                                    <div className="purchase-item-footer">
+                                        <span>Subtotal</span>
+                                        <strong>৳ {calculateSubtotal(item).toFixed(2)}</strong>
+                                    </div>
+                                </div>
+                            );
+                        })}
 
-                                        <td>
-                                            <button
-                                                type="button"
-                                                className="delete-button"
-                                                onClick={() =>
-                                                    removeItem(index)
-                                                }
-                                                disabled={
-                                                    items.length === 1
-                                                }
-                                            >
-                                                Remove
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-
-                            <tfoot>
-                                <tr>
-                                    <td colSpan="4">
-                                        <strong>
-                                            Total Amount
-                                        </strong>
-                                    </td>
-
-                                    <td>
-                                        <strong>
-                                            ৳{" "}
-                                            {totalAmount.toFixed(2)}
-                                        </strong>
-                                    </td>
-
-                                    <td />
-                                </tr>
-                            </tfoot>
-                        </table>
+                        <div className="purchase-total-bar">
+                            <span>Total purchase amount</span>
+                            <strong>৳ {totalAmount.toFixed(2)}</strong>
+                        </div>
                     </div>
                 </div>
 

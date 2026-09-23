@@ -1,12 +1,8 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { getBatches, deleteBatch, getBatchQR } from "../../api/batchApi";
-import { useAuth } from "../../context/AuthContext";
+import { getBatches, getBatchQR } from "../../api/batchApi";
 
 const BatchList = () => {
-    const { user } = useAuth();
-
     const [batches, setBatches] = useState([]);
     const [search, setSearch] = useState("");
     const [expiryFilter, setExpiryFilter] = useState("");
@@ -72,26 +68,6 @@ const BatchList = () => {
         }
     };  
 
-    const handleDelete = async (id) => {
-        const confirmed = window.confirm(
-            "Are you sure you want to delete this batch?"
-        );
-
-        if (!confirmed) return;
-
-        try {
-            await deleteBatch(id);
-            fetchBatches();
-        } catch (error) {
-            console.error("Delete Batch Error:", error);
-
-            alert(
-                error.response?.data?.detail ||
-                "Failed to delete batch."
-            );
-        }
-    };
-
     const isExpired = (expiryDate) => {
         return new Date(expiryDate) < new Date();
     };
@@ -104,14 +80,6 @@ const BatchList = () => {
                     <p>Manage medicine batches and expiry information</p>
                 </div>
 
-                {user?.role === "ADMIN" && (
-                    <Link
-                        to="/batches/new"
-                        className="primary-button"
-                    >
-                        + Add Batch
-                    </Link>
-                )}
             </div>
 
             <div className="filter-card">
@@ -178,9 +146,6 @@ const BatchList = () => {
                                     <th>Purchase Price</th>
                                     <th>Selling Price</th>
                                     <th>QR Code</th>
-                                    {user?.role === "ADMIN" && (
-                                        <th>Actions</th>
-                                    )}
                                 </tr>
                             </thead>
 
@@ -239,39 +204,12 @@ const BatchList = () => {
                                                 </div>
                                             </td>
 
-                                            {user?.role === "ADMIN" && (
-                                                <td>
-                                                    <div className="action-buttons">
-                                                        <Link
-                                                            to={`/batches/${batch.id}/edit`}
-                                                            className="edit-button"
-                                                        >
-                                                            Edit
-                                                        </Link>
-
-                                                        <button
-                                                            className="delete-button"
-                                                            onClick={() =>
-                                                                handleDelete(
-                                                                    batch.id
-                                                                )
-                                                            }
-                                                        >
-                                                            Delete
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            )}
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
                                         <td
-                                            colSpan={
-                                                user?.role === "ADMIN"
-                                                    ? 8
-                                                    : 7
-                                            }
+                                            colSpan={7}
                                             className="empty-state"
                                         >
                                             No batches found.

@@ -36,6 +36,7 @@ class BatchAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "medicine",
+        "supplier_batch_number",
         "batch_number",
         "expiry_date",
         "pack_size",
@@ -57,3 +58,12 @@ class BatchAdmin(admin.ModelAdmin):
         "expiry_date",
         "medicine__name",
     )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

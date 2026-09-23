@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 
 
 class Medicine(models.Model):
@@ -34,6 +35,11 @@ class Batch(models.Model):
         on_delete=models.PROTECT,
         related_name="batches"
     )
+    supplier_batch_number = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+    )
     batch_number = models.CharField(max_length=100,unique=True,editable=False)
     expiry_date = models.DateField()
     pack_size = models.PositiveIntegerField()
@@ -58,12 +64,16 @@ class Batch(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["medicine", "batch_number"],
+                fields=["medicine", "supplier_batch_number"],
+                condition=Q(supplier_batch_number__gt=""),
                 name="unique_medicine_batch"
             )
         ]
 
     def save(self, *args, **kwargs):
+        if not self.batch_number:
+            self.batch_number = f"BTH-{uuid.uuid4().hex[:12].upper()}"
+
         if not self.qr_code:
             self.qr_code = f"MED-{uuid.uuid4().hex[:12].upper()}"
 

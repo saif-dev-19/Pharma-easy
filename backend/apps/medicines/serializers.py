@@ -48,6 +48,7 @@ class BatchSerializer(serializers.ModelSerializer):
             "medicine",
             "medicine_name",
             "medicine_strength",
+            "supplier_batch_number",
             "batch_number",
             "expiry_date",
             "pack_size",
@@ -61,6 +62,8 @@ class BatchSerializer(serializers.ModelSerializer):
             "id",
             "medicine_name",
             "medicine_strength",
+            "supplier_batch_number",
+            "batch_number",
             "qr_code",
             "created_at",
         ]

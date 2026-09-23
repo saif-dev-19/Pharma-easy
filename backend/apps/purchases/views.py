@@ -6,7 +6,7 @@ from apps.authentication.permissions import IsAdminOrManager, IsAdminOrReadOnly
 
 from .models import Purchase, Supplier
 from .serializers import PurchaseSerializer, SupplierSerializer
-from .services import create_purchase
+from .services import create_purchase, delete_purchase, update_purchase
 
 
 class PurchaseViewSet(viewsets.ModelViewSet):
@@ -25,8 +25,7 @@ class PurchaseViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         validated_data = serializer.validated_data
-        items_data = validated_data.pop("items")
-        print(items_data)
+        items_data = validated_data.pop("items", [])
 
         purchase = create_purchase(
             purchase_data=validated_data,
@@ -40,6 +39,31 @@ class PurchaseViewSet(viewsets.ModelViewSet):
             response_serializer.data,
             status=status.HTTP_201_CREATED,
         )
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        purchase = self.get_object()
+        serializer = self.get_serializer(
+            purchase,
+            data=request.data,
+            partial=partial,
+        )
+        serializer.is_valid(raise_exception=True)
+
+        validated_data = serializer.validated_data
+        items_data = validated_data.pop("items", None)
+        purchase = update_purchase(
+            purchase=purchase,
+            purchase_data=validated_data,
+            items_data=items_data,
+        )
+
+        return Response(self.get_serializer(purchase).data)
+
+    def destroy(self, request, *args, **kwargs):
+        purchase = self.get_object()
+        delete_purchase(purchase=purchase)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_queryset(self):
         queryset = (
