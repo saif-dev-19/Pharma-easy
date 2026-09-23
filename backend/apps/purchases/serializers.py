@@ -9,13 +9,16 @@ class PurchaseItemSerializer(serializers.ModelSerializer):
         model = PurchaseItem
         fields = [
             "id",
-            "batch",
+            "medicine",
             "quantity",
             "purchase_price",
             "selling_price",
             "subtotal",
         ]
-        read_only_fields = ["id"]
+        read_only_fields = [
+            "id",
+            "subtotal",
+        ]
 
 
 class PurchaseSerializer(serializers.ModelSerializer):

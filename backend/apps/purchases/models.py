@@ -56,14 +56,17 @@ class Purchase(models.Model):
         return self.invoice_number
 
 
+from apps.medicines.models import Medicine
+
+
 class PurchaseItem(models.Model):
     purchase = models.ForeignKey(
         Purchase,
         on_delete=models.CASCADE,
         related_name="items"
     )
-    batch = models.ForeignKey(
-        Batch,
+    medicine = models.ForeignKey(
+        Medicine,
         on_delete=models.PROTECT,
         related_name="purchase_items"
     )
@@ -86,4 +89,4 @@ class PurchaseItem(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.batch} - {self.quantity}"
+        return f"{self.medicine} - {self.quantity}"
